@@ -1,0 +1,2519 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CSS Flexbox &amp; Grid Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: lab bench — sticky header, step rail (sections × 5E phases) on the left,
+   one step at a time in the middle, and a docked, resizable code bench on the right
+   that can pop out to full screen and dock back again. */
+:root{
+  --bg:#eceff2; --surface:#ffffff; --surface-2:#f5f7f9; --surface-3:#e9eef1;
+  --line:#ccd5db; --line-soft:#e0e6ea;
+  --ink:#152530; --ink-2:#4d616e; --ink-3:#788c98;
+  --accent:#0d6b6b; --accent-ink:#ffffff; --accent-soft:#d8ebea; --accent-line:#8fc4c1;
+  --amber:#8f5410; --amber-soft:#f8e9d6; --amber-line:#dcb37c;
+  --good:#1b6a43; --good-soft:#dbefe3; --bad:#9c2b22; --bad-soft:#f8e2df;
+  --code-bg:#0e1b21; --code-ink:#dbe6ea; --code-tag:#7fd1c6; --code-attr:#e3b572; --code-val:#9fc9f0; --code-pun:#7f94a0; --code-com:#6f8894; --code-sel:#f0a58f;
+  /* 5E phase colours */
+  --e1:#a6520c; --e1s:#fbeadb;   /* Engage    */
+  --e2:#0d6b6b; --e2s:#d8ebea;   /* Explore   */
+  --e3:#2c5b98; --e3s:#dde7f5;   /* Explain   */
+  --e4:#6a4699; --e4s:#ebe2f6;   /* Elaborate */
+  --e5:#1b6a43; --e5s:#dbefe3;   /* Evaluate  */
+  --f-dis:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:10px; --shadow:0 1px 2px rgba(16,36,48,.06), 0 8px 24px -16px rgba(16,36,48,.28);
+  --top:57px; --dock-w:46vw;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c1216; --surface:#141d22; --surface-2:#19242a; --surface-3:#1f2c33;
+    --line:#2b383f; --line-soft:#223036;
+    --ink:#e3edf1; --ink-2:#a7b8c1; --ink-3:#7e919c;
+    --accent:#45b6ad; --accent-ink:#04231f; --accent-soft:#16312f; --accent-line:#2f6a65;
+    --amber:#d99f55; --amber-soft:#2e2418; --amber-line:#5c4727;
+    --good:#5fc08a; --good-soft:#14281e; --bad:#e58175; --bad-soft:#2e1a18;
+    --code-bg:#091115; --code-ink:#d7e3e8;
+    --e1:#e39a52; --e1s:#2f2216; --e2:#45b6ad; --e2s:#16312f; --e3:#7fa9e3; --e3s:#18243a; --e4:#b294e0; --e4s:#251c36; --e5:#5fc08a; --e5s:#14281e;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c1216; --surface:#141d22; --surface-2:#19242a; --surface-3:#1f2c33;
+  --line:#2b383f; --line-soft:#223036;
+  --ink:#e3edf1; --ink-2:#a7b8c1; --ink-3:#7e919c;
+  --accent:#45b6ad; --accent-ink:#04231f; --accent-soft:#16312f; --accent-line:#2f6a65;
+  --amber:#d99f55; --amber-soft:#2e2418; --amber-line:#5c4727;
+  --good:#5fc08a; --good-soft:#14281e; --bad:#e58175; --bad-soft:#2e1a18;
+  --code-bg:#091115; --code-ink:#d7e3e8;
+  --e1:#e39a52; --e1s:#2f2216; --e2:#45b6ad; --e2s:#16312f; --e3:#7fa9e3; --e3s:#18243a; --e4:#b294e0; --e4s:#251c36; --e5:#5fc08a; --e5s:#14281e;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:var(--top)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;-webkit-text-size-adjust:100%}
+h1,h2,h3,h4{font-family:var(--f-dis);font-weight:600;letter-spacing:-.015em;line-height:1.2;text-wrap:balance;margin:0}
+p{margin:0 0 .85em}
+p:last-child{margin-bottom:0}
+code{font-family:var(--f-mono);font-size:.88em}
+a{color:var(--accent)}
+img{max-width:100%}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:0;z-index:40;height:var(--top);background:color-mix(in srgb,var(--surface) 90%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;padding:0 max(16px,2vw)}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+.topbar h1{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .tb-id{flex:1 1 220px;min-width:0}
+.prog{display:flex;align-items:center;gap:10px;flex:0 1 260px;min-width:150px}
+.prog-track{flex:1;height:8px;border-radius:99px;background:var(--surface-3);overflow:hidden;border:1px solid var(--line-soft)}
+.prog-fill{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-line));transition:width .35s ease}
+.prog-txt{font-family:var(--f-mono);font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tb-btn{font-family:var(--f-mono);font-size:12px;background:none;border:1px solid var(--line);color:var(--ink-2);border-radius:99px;padding:5px 11px;cursor:pointer;white-space:nowrap}
+.tb-btn:hover{border-color:var(--accent);color:var(--accent)}
+.lms{font-family:var(--f-mono);font-size:11px;letter-spacing:.04em;color:var(--ink-3);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.lms::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ink-3)}
+.lms[data-on="1"]{color:var(--good)}
+.lms[data-on="1"]::before{background:var(--good)}
+@media (max-width:720px){.lms,.prog-txt{display:none}.prog{min-width:90px}}
+
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:256px minmax(0,1fr);align-items:start}
+body.has-dock .shell{grid-template-columns:256px minmax(0,1fr) var(--dock-w)}
+.rail{position:sticky;top:var(--top);max-height:calc(100vh - var(--top));overflow-y:auto;padding:14px 10px 40px max(10px,1.4vw);border-right:1px solid var(--line);min-width:0;scrollbar-width:thin}
+.rail-sec{margin:10px 0 4px;padding:10px 10px 8px;border-radius:9px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:flex;gap:10px;align-items:center;width:100%;text-align:left;font:inherit;color:var(--ink)}
+.rail-sec:hover{border-color:var(--accent)}
+.rail-sec[aria-expanded="true"]{border-color:var(--accent-line);background:var(--accent-soft)}
+.rail-sec .num{font-family:var(--f-dis);font-size:20px;color:var(--accent);width:20px;text-align:center}
+.rail-sec .nm{font-family:var(--f-dis);font-size:14.5px;font-weight:600;line-height:1.25}
+.rail-sec .sub{display:block;font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3);margin-top:2px}
+.rail-sec .bar{display:block;height:3px;border-radius:9px;background:var(--surface-3);margin-top:5px;overflow:hidden}
+.rail-sec .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+.rail-group{padding:0 0 4px 4px}
+.rail-phase{display:flex;align-items:center;gap:7px;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);padding:10px 8px 3px}
+.rail-phase .pdot{width:8px;height:8px;border-radius:50%}
+.rail-item{display:flex;gap:9px;align-items:flex-start;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:6px 10px 6px 12px;color:var(--ink-2);font:inherit;font-size:13.5px;cursor:pointer;line-height:1.35}
+.rail-item:hover{background:var(--surface-2);color:var(--ink)}
+.rail-item[aria-current="true"]{background:var(--accent-soft);color:var(--ink);font-weight:500}
+.rail-dot{flex:0 0 auto;width:15px;height:15px;margin-top:2px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:9px;color:transparent}
+.rail-item[data-done="1"] .rail-dot{background:var(--good);border-color:var(--good);color:#fff}
+.rail-plain{margin-top:6px}
+main{padding:24px max(16px,2.4vw) 90px;min-width:0}
+.wrap{max-width:860px;margin:0 auto}
+
+/* ---------- 5E phase colours ---------- */
+[data-ph="engage"]{--ph:var(--e1);--phs:var(--e1s)}
+[data-ph="explore"]{--ph:var(--e2);--phs:var(--e2s)}
+[data-ph="explain"]{--ph:var(--e3);--phs:var(--e3s)}
+[data-ph="elaborate"]{--ph:var(--e4);--phs:var(--e4s)}
+[data-ph="evaluate"]{--ph:var(--e5);--phs:var(--e5s)}
+[data-ph="start"]{--ph:var(--accent);--phs:var(--accent-soft)}
+.rail-phase .pdot{background:var(--ph)}
+.phase-tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--ph);background:var(--phs);border:1px solid color-mix(in srgb,var(--ph) 35%,transparent);border-radius:99px;padding:2px 9px}
+
+/* 5E strip at the top of every section step */
+.five{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:0 0 18px}
+.five button{font:inherit;cursor:pointer;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 9px 7px;color:var(--ink-3);border-top:3px solid var(--line);min-width:0}
+.five button b{display:block;font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.five button span{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.five button:hover{border-color:var(--ph);color:var(--ink-2)}
+.five button{border-top-color:color-mix(in srgb,var(--ph) 40%,var(--line))}
+.five button[aria-current="true"]{background:var(--phs);border-color:var(--ph);border-top-color:var(--ph);color:var(--ink)}
+.five button[aria-current="true"] b{color:var(--ph)}
+@media (max-width:620px){.five button span{display:none}}
+
+/* ---------- step ---------- */
+.step-head{margin-bottom:18px}
+.step-kicker{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+.step-head h2{font-size:clamp(23px,4.2vw,31px)}
+.step-head .lede{color:var(--ink-2);margin-top:9px;max-width:64ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin:16px 0}
+.card h3{font-size:17px;margin-bottom:8px}
+.card h4{font-size:14.5px;margin:14px 0 6px}
+.tight>p{max-width:68ch}
+.note{border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 8px 8px 0;padding:12px 14px;margin:14px 0;font-size:14px}
+.note.warn{border-color:var(--amber-line);background:var(--amber-soft)}
+.note b{font-weight:600}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px;margin:10px 0 0}
+.kv dt{font-family:var(--f-mono);color:var(--accent);font-weight:500}
+.kv dd{margin:0;color:var(--ink-2)}
+ul.plain,ol.plain{margin:.3em 0 .9em;padding-left:1.25em;color:var(--ink-2)}
+ul.plain li,ol.plain li{margin:.25em 0}
+.tagpill{font-family:var(--f-mono);font-size:.86em;background:var(--surface-3);border:1px solid var(--line-soft);border-radius:5px;padding:1px 5px;color:var(--ink);white-space:nowrap}
+
+/* Big idea / essential question (Engage) */
+.bigq{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);margin:0 0 16px;overflow:hidden}
+.bigq .row{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:14px 18px;border-top:1px solid var(--line-soft)}
+.bigq .row:first-child{border-top:0}
+.bigq .bq-lab{font-family:var(--f-mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--e1);padding-top:3px}
+.bigq .bq-val{font-family:var(--f-dis);font-size:18px;line-height:1.35}
+.bigq .bq-val.q{font-style:italic;font-weight:500}
+@media (max-width:560px){.bigq .row{grid-template-columns:1fr;gap:4px}}
+
+/* ---------- code display ---------- */
+.codeblock{position:relative;background:var(--code-bg);border-radius:9px;border:1px solid var(--line);overflow:hidden;margin:12px 0}
+.code-bar{display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.08);font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#8aa2ad}
+.code-bar .dot{width:8px;height:8px;border-radius:50%;background:#3a4f59}
+.code-bar .cb-tools{margin-left:auto;display:flex;gap:6px}
+.codeblock pre{margin:0;padding:13px 14px;overflow-x:auto;color:var(--code-ink);font-family:var(--f-mono);font-size:13px;line-height:1.65;tab-size:2}
+.cb-btn{background:none;border:1px solid rgba(255,255,255,.16);color:#9fb4bd;font-family:var(--f-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;border-radius:6px;padding:3px 8px;cursor:pointer}
+.cb-btn:hover{color:#fff;border-color:rgba(255,255,255,.4)}
+.cb-btn.load{border-color:rgba(127,209,198,.45);color:#7fd1c6}
+.c-tag{color:var(--code-tag)}.c-attr{color:var(--code-attr)}.c-val{color:var(--code-val)}.c-pun{color:var(--code-pun)}.c-com{color:var(--code-com);font-style:italic}.c-sel{color:var(--code-sel)}.c-prop{color:var(--code-attr)}.c-at{color:#c9a0f0}
+mark.hi{background:rgba(69,182,173,.22);color:inherit;border-radius:3px;padding:1px 0;box-shadow:0 0 0 2px rgba(69,182,173,.22)}
+.callouts{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:7px}
+.callouts li{display:flex;gap:10px;font-size:13.5px;color:var(--ink-2)}
+.callouts b{flex:0 0 22px;height:22px;border-radius:6px;background:var(--accent);color:var(--accent-ink);font-family:var(--f-mono);font-size:11.5px;display:grid;place-items:center;font-weight:600}
+.codeblock pre span.ln{display:block}
+.codeblock pre span.ln.on{background:rgba(69,182,173,.18);box-shadow:inset 3px 0 0 var(--accent)}
+
+/* ---------- tasks ---------- */
+.task{border:1px solid var(--accent-line);border-radius:var(--r);background:var(--surface);padding:18px;margin:20px 0;box-shadow:var(--shadow)}
+.task.done{border-color:var(--good)}
+.task-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.badge{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;background:var(--accent);color:var(--accent-ink);border-radius:99px;padding:3px 10px;font-weight:600}
+.badge.bonus{background:var(--amber);color:#fff}
+.badge.quiz{background:var(--ink-2);color:var(--surface)}
+.badge.cap{background:var(--e5);color:#fff}
+.task-head h3{font-size:17px;flex:1 1 200px;min-width:0}
+.state{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+.task.done .state{color:var(--good);font-weight:600}
+.task-brief{font-size:14.5px;color:var(--ink-2);max-width:68ch}
+.task-brief ol,.task-brief ul{padding-left:1.2em;margin:.5em 0}
+.task-brief li{margin:.28em 0}
+.task-brief code{background:var(--surface-3);border-radius:4px;padding:1px 4px}
+.where{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--ink-3);margin-top:10px;font-family:var(--f-mono)}
+.where::before{content:"→";color:var(--accent)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{font-family:var(--f-body);font-size:13.5px;font-weight:500;border-radius:8px;padding:8px 15px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:none;color:var(--ink-2)}
+.checklist{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:6px}
+.checklist li{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;color:var(--ink-2);padding:6px 9px;border-radius:7px;background:var(--surface-2);border:1px solid var(--line-soft);transition:background .2s,border-color .2s}
+.checklist .mk{flex:0 0 18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;border:1.5px solid var(--line);color:var(--ink-3);margin-top:1px}
+.checklist li[data-r="pass"]{background:var(--good-soft);border-color:var(--good)}
+.checklist li[data-r="pass"] .mk{background:var(--good);border-color:var(--good);color:#fff}
+.checklist li[data-r="fail"]{background:var(--bad-soft);border-color:var(--bad)}
+.checklist li[data-r="fail"] .mk{background:var(--bad);border-color:var(--bad);color:#fff}
+.checklist code{background:color-mix(in srgb,var(--ink) 8%,transparent);border-radius:4px;padding:0 4px}
+.feedback{margin-top:12px;padding:11px 13px;border-radius:8px;font-size:14px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--good-soft);border:1px solid var(--good);color:var(--ink)}
+.feedback.no{background:var(--amber-soft);border:1px solid var(--amber-line);color:var(--ink)}
+.hintbox{margin-top:12px;padding:11px 13px;border-radius:8px;background:var(--amber-soft);border:1px dashed var(--amber-line);font-size:14px}
+.hintbox b{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);display:block;margin-bottom:4px}
+.hintbox code{background:color-mix(in srgb,var(--ink) 8%,transparent);border-radius:4px;padding:0 4px}
+
+/* ---------- quiz ---------- */
+.quiz{display:grid;gap:9px;margin-top:12px}
+.opt{display:flex;gap:10px;align-items:flex-start;text-align:left;width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:11px 13px;font:inherit;font-size:14px;color:var(--ink);cursor:pointer}
+.opt:hover{border-color:var(--accent)}
+.opt .lt{flex:0 0 22px;height:22px;border-radius:6px;background:var(--surface-3);border:1px solid var(--line);display:grid;place-items:center;font-family:var(--f-mono);font-size:12px;color:var(--ink-2)}
+.opt[data-s="pass"]{background:var(--good-soft);border-color:var(--good)}
+.opt[data-s="pass"] .lt{background:var(--good);border-color:var(--good);color:#fff}
+.opt[data-s="fail"]{background:var(--bad-soft);border-color:var(--bad)}
+.opt[data-s="fail"] .lt{background:var(--bad);border-color:var(--bad);color:#fff}
+.opt code{background:color-mix(in srgb,var(--ink) 9%,transparent);border-radius:4px;padding:1px 5px}
+.opt pre{margin:4px 0 0;font-family:var(--f-mono);font-size:12.5px;white-space:pre-wrap}
+.q-why{margin-top:10px;font-size:13.5px;color:var(--ink-2);padding:10px 12px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line-soft);display:none}
+.q-why.show{display:block}
+.q-code{margin-top:10px}
+
+/* ---------- reflection, self-assessment, exit ticket ---------- */
+.reflect{border:1px solid var(--line);border-left:4px solid var(--ph,var(--accent));border-radius:0 var(--r) var(--r) 0;background:var(--surface);padding:14px 16px;margin:16px 0}
+.reflect label{display:block;font-size:14px;color:var(--ink);font-weight:500;margin-bottom:8px}
+.reflect label small{display:block;font-weight:400;color:var(--ink-3);font-family:var(--f-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.reflect textarea{width:100%;min-height:76px;resize:vertical;font:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--ink)}
+.reflect .saved{font-family:var(--f-mono);font-size:11px;color:var(--ink-3);margin-top:5px;min-height:16px}
+.sa{display:grid;gap:8px;margin-top:10px}
+.sa-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:9px 12px;border:1px solid var(--line-soft);border-radius:8px;background:var(--surface-2);font-size:14px}
+.sa-opts{display:flex;gap:4px}
+.sa-opts button{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:99px;padding:4px 10px;cursor:pointer;white-space:nowrap}
+.sa-opts button[aria-pressed="true"][data-v="0"]{background:var(--bad-soft);border-color:var(--bad);color:var(--ink)}
+.sa-opts button[aria-pressed="true"][data-v="1"]{background:var(--amber-soft);border-color:var(--amber-line);color:var(--ink)}
+.sa-opts button[aria-pressed="true"][data-v="2"]{background:var(--good-soft);border-color:var(--good);color:var(--ink)}
+@media (max-width:620px){.sa-row{grid-template-columns:1fr}}
+.ticket{display:grid;gap:10px;margin-top:10px}
+.ticket .tk{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start}
+.ticket .tk b{font-family:var(--f-dis);font-size:26px;color:var(--e5);text-align:center;line-height:1}
+.ticket .tk label{font-size:14px;color:var(--ink-2);display:block;margin-bottom:5px}
+.ticket textarea{width:100%;min-height:58px;resize:vertical;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--ink)}
+
+/* ---------- interactive widgets ---------- */
+.lab{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:16px;margin:16px 0}
+.lab-head{font-family:var(--f-mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.lab-head::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.ctrls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.ctrls label{font-size:12.5px;color:var(--ink-2);display:flex;align-items:center;gap:7px;font-family:var(--f-mono)}
+.ctrls input[type=range]{width:130px;accent-color:var(--accent)}
+.ctrls select{font:inherit;font-size:13px;padding:4px 7px;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);color:var(--ink)}
+.chip{font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink-2);border-radius:99px;padding:5px 12px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:760px){.split{grid-template-columns:1fr}}
+.render{background:#fff;color:#111;border:1px solid var(--line);border-radius:8px;padding:12px;overflow:hidden;min-width:0}
+.val{font-family:var(--f-mono);font-size:12px;color:var(--accent);min-width:46px;display:inline-block;font-variant-numeric:tabular-nums}
+.anat{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.verdict{font-size:13px;margin-top:8px;color:var(--ink-2)}
+.verdict b{color:var(--ink)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:12px}
+.minicard{border:1px solid var(--line);border-radius:9px;padding:13px;background:var(--surface-2)}
+.minicard h4{font-size:13.5px;margin:0 0 5px;display:flex;gap:7px;align-items:center}
+.minicard p{font-size:13px;color:var(--ink-2);margin:0}
+.minicard[data-ph]{border-top:3px solid var(--ph)}
+.minicard[data-ph] h4{color:var(--ph)}
+.scroller{overflow-x:auto}
+table.ref{border-collapse:collapse;width:100%;font-size:13.5px;min-width:430px}
+table.ref th,table.ref td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+table.ref th{background:var(--surface-3);font-family:var(--f-mono);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);font-weight:600}
+table.ref td:first-child{font-family:var(--f-mono);color:var(--accent);white-space:nowrap}
+
+/* demo boxes used by the widgets */
+.fx{display:flex;gap:8px;padding:10px;background:#eef4f7;border:2px dashed #0d6b6b;border-radius:8px;min-height:60px;transition:all .25s}
+.fx .it{background:#0d6b6b;color:#fff;font:600 13px/1 var(--f-mono);padding:12px 14px;border-radius:6px;min-width:44px;text-align:center}
+.fx .it:nth-child(2){background:#2c5b98}.fx .it:nth-child(3){background:#a6520c}.fx .it:nth-child(4){background:#6a4699}.fx .it:nth-child(5){background:#1b6a43}.fx .it:nth-child(6){background:#9c2b22}
+.gx{display:grid;gap:8px;padding:10px;background:#eef4f7;border:2px dashed #2c5b98;border-radius:8px;transition:all .25s}
+.gx .it{background:#2c5b98;color:#fff;font:600 13px/1 var(--f-mono);padding:14px 6px;border-radius:6px;text-align:center;min-width:0;overflow:hidden}
+.axis{position:relative;margin-top:8px;height:22px;font:11px var(--f-mono);color:#0d6b6b}
+.mini-browser{border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff;transition:width .25s}
+.mini-browser .mb-bar{display:flex;gap:5px;align-items:center;padding:6px 9px;background:#e5eaee;border-bottom:1px solid #ccd5db;font:11px var(--f-mono);color:#4d616e}
+.mini-browser .mb-bar i{width:8px;height:8px;border-radius:50%;background:#c3ccd2}
+.mini-browser .mb-body{padding:10px;color:#111}
+.hl-box{outline:3px solid #a6520c!important;outline-offset:2px}
+.hl-item{outline:3px solid #6a4699!important;outline-offset:1px}
+.sorter{display:grid;gap:8px}
+.sorter .sc{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:9px 12px;border:1px solid var(--line-soft);border-radius:8px;background:var(--surface-2);font-size:14px}
+.sorter .sc[data-r="pass"]{background:var(--good-soft);border-color:var(--good)}
+.sorter .sc[data-r="fail"]{background:var(--bad-soft);border-color:var(--bad)}
+.sorter .sc .why{grid-column:1/-1;font-size:13px;color:var(--ink-2)}
+.sketches{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+@media (max-width:620px){.sketches{grid-template-columns:1fr}}
+.sketch{border:1px solid var(--line);border-radius:9px;background:var(--surface-2);padding:10px;cursor:pointer;text-align:left;font:inherit;color:var(--ink)}
+.sketch:hover{border-color:var(--accent)}
+.sketch[data-s="pass"]{background:var(--good-soft);border-color:var(--good)}
+.sketch[data-s="fail"]{background:var(--bad-soft);border-color:var(--bad)}
+.sketch .cap{font-family:var(--f-mono);font-size:11.5px;color:var(--ink-2);margin-top:6px;display:block}
+.sk{background:#fff;border:1px solid #ccd5db;border-radius:6px;padding:6px;display:grid;gap:5px;height:118px}
+.sk div{border-radius:4px}
+
+/* ---------- step nav ---------- */
+.stepnav{display:flex;gap:10px;align-items:center;margin-top:30px;padding-top:18px;border-top:1px solid var(--line);flex-wrap:wrap}
+.stepnav .spacer{flex:1}
+.stepnav .pos{font-family:var(--f-mono);font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.banner{border:1px solid var(--accent-line);background:var(--accent-soft);border-radius:var(--r);padding:16px 18px;margin:0 0 18px}
+.banner h3{font-size:16px;margin-bottom:6px}
+.banner p{font-size:14px;color:var(--ink-2);margin:0}
+.score-card{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}
+.score-card div{border:1px solid var(--line);border-radius:9px;padding:12px;background:var(--surface-2)}
+.score-card b{display:block;font-family:var(--f-dis);font-size:26px;color:var(--accent)}
+.score-card span{font-size:12.5px;color:var(--ink-2)}
+
+/* ================= DOCK: the code bench on the right ================= */
+.dock{position:sticky;top:var(--top);height:calc(100vh - var(--top));display:none;flex-direction:column;background:var(--surface);border-left:1px solid var(--line);min-width:0}
+body.has-dock .dock{display:flex}
+.dock-resize{position:absolute;left:-5px;top:0;bottom:0;width:10px;cursor:col-resize;z-index:5}
+.dock-resize::after{content:"";position:absolute;left:4px;top:50%;width:3px;height:44px;margin-top:-22px;border-radius:3px;background:var(--line);transition:background .15s}
+.dock-resize:hover::after,.dock.dragging .dock-resize::after{background:var(--accent)}
+.dock-top{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.dock-title{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.dock-title b{color:var(--ink);font-weight:600}
+.icon-btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:11px;letter-spacing:.04em;background:var(--surface);border:1px solid var(--line);color:var(--ink-2);border-radius:7px;padding:5px 9px;cursor:pointer;white-space:nowrap}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent)}
+.icon-btn.accent{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.icon-btn svg{width:14px;height:14px;flex:0 0 auto}
+.dock-body{flex:1;display:flex;flex-direction:column;min-height:0}
+.dpane{display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden}
+.dpane.ed{flex:0 0 var(--ed-size,52%)}
+.dpane.out{flex:1 1 auto}
+.dsplit{flex:0 0 8px;cursor:row-resize;background:var(--surface-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line);position:relative}
+.dsplit::after{content:"";position:absolute;left:50%;top:2px;width:40px;height:2px;margin-left:-20px;border-radius:2px;background:var(--line)}
+.dsplit:hover::after,.dock.dragging .dsplit::after{background:var(--accent)}
+.ptabs{display:flex;align-items:stretch;background:var(--surface-3);border-bottom:1px solid var(--line);min-height:34px}
+.ptab{font-family:var(--f-mono);font-size:12px;background:none;border:0;border-right:1px solid var(--line);color:var(--ink-3);padding:0 14px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.ptab[aria-selected="true"]{background:var(--code-bg);color:#dbe6ea}
+.ptab .fdot{width:7px;height:7px;border-radius:50%;background:#e3b572}
+.ptab[data-f="css"] .fdot{background:#7fd1c6}
+.ptools{margin-left:auto;display:flex;align-items:center;gap:6px;padding:0 8px}
+.mini{background:var(--surface);border:1px solid var(--line);color:var(--ink-2);font-family:var(--f-mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;border-radius:6px;padding:3px 8px;cursor:pointer;white-space:nowrap}
+.mini:hover{border-color:var(--accent);color:var(--accent)}
+.mini[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.edwrap{flex:1;display:flex;min-height:0;background:var(--code-bg)}
+.gutter{flex:0 0 auto;padding:12px 8px 12px 10px;text-align:right;font-family:var(--f-mono);font-size:12.6px;line-height:1.6;color:#4f6670;user-select:none;overflow:hidden;white-space:pre;min-width:38px}
+textarea.editor{flex:1;min-width:0;border:0;resize:none;padding:12px 12px 12px 6px;background:var(--code-bg);color:var(--code-ink);font-family:var(--f-mono);font-size:12.6px;line-height:1.6;tab-size:2;white-space:pre;overflow:auto;outline:0}
+textarea.editor:focus{box-shadow:inset 0 0 0 2px var(--accent)}
+.outhead{display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--surface-3);border-bottom:1px solid var(--line);font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);flex-wrap:wrap}
+.outhead .w{margin-left:auto;font-variant-numeric:tabular-nums;text-transform:none;letter-spacing:0}
+.stage{flex:1;min-height:0;overflow:auto;background:repeating-linear-gradient(45deg,var(--surface-2),var(--surface-2) 8px,var(--surface-3) 8px,var(--surface-3) 16px);display:flex;justify-content:center}
+iframe.preview{border:0;background:#fff;display:block;height:100%;width:100%;transition:width .25s}
+.stage[data-dev="tablet"] iframe.preview{width:768px;flex:0 0 768px;box-shadow:0 0 0 1px var(--line)}
+.stage[data-dev="phone"] iframe.preview{width:375px;flex:0 0 375px;box-shadow:0 0 0 1px var(--line)}
+.dock-foot{display:flex;align-items:center;gap:8px;padding:6px 10px;border-top:1px solid var(--line);background:var(--surface-2);font-family:var(--f-mono);font-size:11px;color:var(--ink-3)}
+.dock-foot .live{display:flex;gap:6px;align-items:center}
+.dock-foot .live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--good)}
+.dock-foot .tick{margin-left:auto;color:var(--ink-2)}
+.dock-empty{flex:1;display:grid;place-items:center;text-align:center;padding:30px;color:var(--ink-3);font-size:14px}
+
+/* maximised (pop-out) mode */
+.dock.max{position:fixed;inset:0;z-index:100;height:auto;border:0;box-shadow:0 0 0 100vmax rgba(8,16,20,.45)}
+.dock.max .dock-resize{display:none}
+.dock.max .dock-body{flex-direction:row}
+.dock.max .dpane.ed{flex:0 0 var(--ed-size-x,40%)}
+.dock.max .dsplit{cursor:col-resize;border:0;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+.dock.max .dsplit::after{left:2px;top:50%;width:2px;height:40px;margin:-20px 0 0}
+.dock.max .gutter,.dock.max textarea.editor{font-size:14px}
+.dock .max-only{display:none}
+.dock.max .max-only{display:inline-flex}
+.dock.max .dock-only{display:none}
+.max-brief{display:none}
+.dock.max .max-brief{display:flex;flex-direction:column;flex:0 0 300px;border-right:1px solid var(--line);background:var(--surface);overflow:auto;padding:14px}
+.dock.max.nobrief .max-brief{display:none}
+.max-brief h4{font-size:15px;margin:0 0 8px}
+.max-brief .checklist li{font-size:13px}
+body.dock-max{overflow:hidden}
+.dock.dragging,.dock.dragging *{user-select:none}
+.dock.dragging iframe{pointer-events:none}
+
+@media (max-width:1600px){body.has-dock main .split{grid-template-columns:1fr}}
+/* smaller screens: dock flows below the step, still poppable */
+@media (max-width:1180px){
+  body.has-dock .shell{grid-template-columns:240px minmax(0,1fr)}
+  body.has-dock .dock:not(.max){grid-column:2;position:relative;top:auto;height:620px;margin:0 max(16px,2.4vw) 40px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  .dock-resize{display:none}
+}
+@media (max-width:860px){
+  .shell,body.has-dock .shell{grid-template-columns:1fr}
+  .rail{position:static;max-height:none;display:flex;gap:6px;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:10px max(16px,3vw);align-items:center}
+  .rail-sec{width:auto;margin:0;white-space:nowrap;flex:0 0 auto}
+  .rail-sec .sub,.rail-sec .bar{display:none}
+  .rail-group,.rail-phase,.rail-plain{display:none}
+  body.has-dock .dock:not(.max){grid-column:1}
+  main{padding-top:18px}
+  .dock.max .dock-body{flex-direction:column}
+  .dock.max .dpane.ed{flex-basis:50%}
+  .dock.max .dsplit{cursor:row-resize}
+  .dock.max .max-brief{display:none}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="tb-id">
+    <div class="eyebrow">CIS1203 · Web Technologies · Ch. 5–7 · CLO4</div>
+    <h1>CSS Flexbox &amp; Grid Lab</h1>
+  </div>
+  <span class="lms" id="lmsState" title="Connection to Blackboard">Preview mode</span>
+  <div class="prog">
+    <div class="prog-track"><span class="prog-fill" id="progFill"></span></div>
+    <span class="prog-txt" id="progTxt">0 / 0 done</span>
+  </div>
+  <button class="tb-btn" id="themeBtn" type="button">Theme</button>
+</header>
+
+<div class="shell">
+  <nav class="rail" id="rail" aria-label="Lab sections and steps"></nav>
+  <main id="main">
+  <div class="wrap">
+
+<!-- ======================================================= START -->
+<section class="step" data-sec="start" data-ph="start" data-title="How this lab works" data-ws="intro">
+  <div class="step-head">
+    <div class="step-kicker"><span class="phase-tag">Start here</span>CLO4 — Apply different styles to modify the appearance of static web pages</div>
+    <h2>Lay out real pages with Flexbox and Grid</h2>
+    <p class="lede">Three sections, one per chapter: <b>CSS Flexbox</b>, <b>CSS Grid</b>, and <b>Flexbox + Grid together</b>. Each section walks through the same five phases, so you always know where you are and what comes next.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="minicard" data-ph="engage"><h4>1 · Engage</h4><p><b>Get curious.</b> A big idea, an essential question and a quick first try with a prediction.</p></div>
+    <div class="minicard" data-ph="explore"><h4>2 · Explore</h4><p><b>Try it out.</b> One property at a time: play with a widget, then change real code until it ticks.</p></div>
+    <div class="minicard" data-ph="explain"><h4>3 · Explain</h4><p><b>Make sense of it.</b> Name the parts, connect the ideas, check your understanding.</p></div>
+    <div class="minicard" data-ph="elaborate"><h4>4 · Elaborate</h4><p><b>Take it further.</b> Apply it to responsive, real-world pages from the slides.</p></div>
+    <div class="minicard" data-ph="evaluate"><h4>5 · Evaluate</h4><p><b>Show what you know.</b> A build challenge, a quiz, a self-assessment and a 3-2-1 exit ticket.</p></div>
+  </div>
+
+  <div class="card tight">
+    <h3>The code bench (right side)</h3>
+    <p>Every practical step opens a <b>code bench</b> on the right with two files — <code>index.html</code> and <code>style.css</code> — and an <b>Output</b> that re-renders as you type. The page already links the stylesheet, so whatever you write in <code>style.css</code> is applied straight away.</p>
+    <dl class="kv">
+      <dt>Pop out</dt><dd>Opens the bench full screen, with the task checklist beside it. Press <b>Dock back</b> or <code>Esc</code> to return it to the right side.</dd>
+      <dt>Drag the edge</dt><dd>Drag the left edge of the bench to make it wider or narrower. Drag the bar between the editor and the Output to share the height.</dd>
+      <dt>Desktop · Tablet · Phone</dt><dd>Changes the width of the Output, so you can test media queries without resizing your browser.</dd>
+      <dt>Ctrl + Enter</dt><dd>Re-runs the code. <b>Reset</b> puts the starter code back — experiment freely.</dd>
+    </dl>
+    <div class="note"><b>Try it now:</b> in the bench, open <code>style.css</code> and change <code>teal</code> to <code>purple</code>. Then press <b>Pop out</b>, look around, and press <b>Dock back</b>.</div>
+  </div>
+
+  <div class="card tight">
+    <h3>What you will be able to do by the end</h3>
+    <ul class="plain">
+      <li>Turn any element into a <b>flex container</b> and control its items with <code>flex-direction</code>, <code>flex-wrap</code>, <code>justify-content</code> and <code>align-items</code>.</li>
+      <li>Build a <b>grid</b> with <code>display:grid</code>, <code>grid-template-columns</code>, the <code>fr</code> unit and <code>gap</code>.</li>
+      <li>Make pages <b>responsive</b> with the viewport meta tag, responsive images and <code>@media</code> queries.</li>
+      <li>Decide when a layout is <b>one-dimensional (Flexbox)</b> or <b>two-dimensional (Grid)</b>, and nest one inside the other.</li>
+    </ul>
+    <div class="note warn"><b>Your work is saved.</b> Progress, answers and reflections are sent to Blackboard as you go, and your code is kept in this browser. You can leave and come back to the same step.</div>
+  </div>
+</section>
+
+<!-- ======================================================= FLEXBOX -->
+<section class="step" data-sec="flex" data-ph="engage" data-title="The challenge" data-ws="f-engage">
+  <div class="step-head">
+    <h2>Lining things up is harder than it looks</h2>
+    <p class="lede">Before flexbox, designers pushed boxes around with floats and positioning. Flexbox replaced all of that with one line on the parent.</p>
+  </div>
+  <div class="bigq">
+    <div class="row"><div class="bq-lab">Big idea</div><div class="bq-val">One container decides how its children line up — in one direction.</div></div>
+    <div class="row"><div class="bq-lab">Essential question</div><div class="bq-val q">How can we place items in a row or a column and share the space between them, without floats or positioning?</div></div>
+  </div>
+  <div class="card tight">
+    <h3>Guiding questions</h3>
+    <ol class="plain">
+      <li>What is a flex container, and what are flex items?</li>
+      <li>How do I switch the direction items flow in?</li>
+      <li>What happens when the items do not fit on one line?</li>
+      <li>How do I make the same navigation bar work on a laptop and a phone?</li>
+    </ol>
+    <h3 style="margin-top:14px">Your challenge</h3>
+    <p>The <b>HCT Perfume Store</b> needs a navigation bar: five links side by side on a laptop, stacked on a phone. You will build it in the <b>Evaluate</b> phase of this section.</p>
+  </div>
+  <div class="card tight">
+    <h3>First try</h3>
+    <p>The navigation links in the bench are <code>&lt;div&gt;</code>s, so each one sits on its own line. Before you touch the code, predict what one property will do. Then add <code>display: flex;</code> to the <code>.nav</code> rule in <code>style.css</code>.</p>
+  </div>
+  <div data-reflect="f-predict" data-q="Prediction — what do you think will happen to the links when the parent becomes a flex container?"></div>
+  <div data-task="f-engage"></div>
+  <div data-reflect="f-notice" data-q="Look at the Output. What changed, and what did NOT change in the HTML?"></div>
+</section>
+
+<section class="step" data-sec="flex" data-ph="explore" data-title="Flex container &amp; items" data-ws="f-container">
+  <div class="step-head">
+    <h2>One parent, many children</h2>
+    <p class="lede">Flexbox is a layout model built on a <b>container</b>. The parent becomes a <b>flex container</b> and every direct child becomes a <b>flex item</b> — the container then distributes space and aligns its items dynamically.</p>
+  </div>
+  <div class="card tight">
+    <h3>Anatomy</h3>
+    <p>Click a part to see which element it is in the code and on the page.</p>
+    <div data-widget="flexAnatomy"></div>
+    <dl class="kv">
+      <dt>flex container</dt><dd>The element with <code>display: flex;</code> (or <code>display: inline-flex;</code>). It is the parent of everything you want to arrange.</dd>
+      <dt>flex items</dt><dd>The <b>direct</b> children of the container. A grandchild is not a flex item of the same container.</dd>
+      <dt>container properties</dt><dd><code>display</code>, <code>flex-direction</code>, <code>flex-wrap</code>, <code>justify-content</code> — you will meet each one next.</dd>
+    </dl>
+  </div>
+  <div class="card tight">
+    <h3>Worked example — a row of cards</h3>
+    <div data-code="ex-f-container" data-load="1"></div>
+    <ol class="callouts">
+      <li><b>1</b><span><code>.cards</code> is the parent, so that is where <code>display: flex;</code> goes — never on the children.</span></li>
+      <li><b>2</b><span>The three <code>.card</code> elements become flex items automatically and sit in a row (the default direction).</span></li>
+      <li><b>3</b><span>No floats, no positioning: the HTML did not change at all.</span></li>
+    </ol>
+  </div>
+  <div data-task="f-container"></div>
+</section>
+
+<section class="step" data-sec="flex" data-ph="explore" data-title="flex-direction" data-ws="f-direction">
+  <div class="step-head">
+    <h2>Which way do the items flow? <code>flex-direction</code></h2>
+    <p class="lede"><code>flex-direction</code> sets the direction the container stacks its items. Two values from the slides: <code>row</code> (left to right — the default) and <code>column</code> (top to bottom).</p>
+  </div>
+  <div class="lab">
+    <div class="lab-head">Direction explorer</div>
+    <div data-widget="flexDirection"></div>
+  </div>
+  <div class="card tight">
+    <h3>Worked example</h3>
+    <div data-code="ex-f-direction"></div>
+    <div class="note"><b>Remember:</b> <code>row</code> is the default, so <code>flex-direction: row;</code> only matters when you need to switch back — for example inside a media query.</div>
+  </div>
+  <div data-task="f-direction"></div>
+</section>
+
+<section class="step" data-sec="flex" data-ph="explore" data-title="flex-wrap" data-ws="f-wrap">
+  <div class="step-head">
+    <h2>When items do not fit: <code>flex-wrap</code></h2>
+    <p class="lede"><code>flex-wrap</code> decides whether items may move onto a new line. <code>nowrap</code> (the default) squeezes everything onto one line; <code>wrap</code> lets items flow onto the next line.</p>
+  </div>
+  <div class="lab">
+    <div class="lab-head">Shrink the container</div>
+    <div data-widget="flexWrap"></div>
+  </div>
+  <div data-task="f-wrap"></div>
+</section>
+
+<section class="step" data-sec="flex" data-ph="explore" data-title="justify-content &amp; align-items" data-ws="f-justify">
+  <div class="step-head">
+    <h2>Sharing the space: <code>justify-content</code> and <code>align-items</code></h2>
+    <p class="lede"><code>justify-content</code> aligns the items <b>along</b> the direction of flow — for example <code>center</code> puts them in the middle. <code>align-items</code> aligns them <b>across</b> it.</p>
+  </div>
+  <div class="lab">
+    <div class="lab-head">Alignment explorer</div>
+    <div data-widget="flexJustify"></div>
+  </div>
+  <div data-task="f-justify"></div>
+</section>
+
+<section class="step" data-sec="flex" data-ph="explain" data-title="Main axis &amp; cross axis">
+  <div class="step-head">
+    <h2>Make sense of it: two axes</h2>
+    <p class="lede">Every flex container has a <b>main axis</b> — the direction set by <code>flex-direction</code> — and a <b>cross axis</b> at right angles to it. Every alignment property works on one of the two.</p>
+  </div>
+  <div class="lab">
+    <div class="lab-head">See the axes turn</div>
+    <div data-widget="flexAxes"></div>
+  </div>
+  <div class="card">
+    <h3>The flex container properties</h3>
+    <div class="scroller">
+      <table class="ref">
+        <tr><th>Property</th><th>What it controls</th><th>Values you met</th></tr>
+        <tr><td>display</td><td>Turns the element into a flex container.</td><td><code>flex</code>, <code>inline-flex</code></td></tr>
+        <tr><td>flex-direction</td><td>The main axis — the direction items are stacked.</td><td><code>row</code> (default), <code>column</code></td></tr>
+        <tr><td>flex-wrap</td><td>Whether items may move to a new line.</td><td><code>nowrap</code> (default), <code>wrap</code></td></tr>
+        <tr><td>justify-content</td><td>Alignment <b>along the main axis</b>.</td><td><code>flex-start</code>, <code>center</code>, <code>flex-end</code>, <code>space-between</code>, <code>space-around</code></td></tr>
+        <tr><td>align-items</td><td>Alignment <b>along the cross axis</b>.</td><td><code>stretch</code>, <code>flex-start</code>, <code>center</code>, <code>flex-end</code></td></tr>
+      </table>
+    </div>
+    <div class="note warn"><b>Common mistake:</b> switching to <code>flex-direction: column</code> also turns the axes. Now <code>justify-content</code> works vertically and <code>align-items</code> works horizontally.</div>
+  </div>
+  <div data-quiz="fq1"></div>
+  <div data-quiz="fq2"></div>
+  <div data-quiz="fq3"></div>
+  <div data-reflect="f-explain" data-q="In your own words: what is the difference between justify-content and align-items?"></div>
+</section>
+
+<section class="step" data-sec="flex" data-ph="elaborate" data-title="Responsive pages &amp; images" data-ws="f-rwd">
+  <div class="step-head">
+    <h2>Responsive web design</h2>
+    <p class="lede">Responsive web design is about creating pages that look good on <b>all</b> devices. The page automatically adjusts to different screen sizes by resizing, hiding, shrinking, enlarging or moving content — using only HTML and CSS.</p>
+  </div>
+  <div class="card tight">
+    <h3>Step 1 — set the viewport</h3>
+    <p>Add this <code>&lt;meta&gt;</code> tag to the <code>&lt;head&gt;</code> of every page. Without it, a phone pretends to be a wide desktop screen and shrinks the whole page.</p>
+    <div data-code="ex-viewport"></div>
+  </div>
+  <div class="card tight">
+    <h3>Step 2 — responsive images</h3>
+    <p>Two ways to make an image follow its container. Drag the slider to change the space available.</p>
+    <div class="lab" style="margin:10px 0 0"><div data-widget="imgWidth"></div></div>
+    <dl class="kv">
+      <dt>width:100%</dt><dd>The image always fills its container — it scales <b>up and down</b>, and can become blurry when stretched.</dd>
+      <dt>max-width:100%</dt><dd>The image scales <b>down</b> if it has to, but never grows larger than its original size. Add <code>height:auto</code> to keep its shape.</dd>
+    </dl>
+  </div>
+  <div data-task="f-rwd"></div>
+</section>
+
+<section class="step" data-sec="flex" data-ph="elaborate" data-title="Media queries + flexbox" data-ws="f-media">
+  <div class="step-head">
+    <h2>Different styles for different screens: <code>@media</code></h2>
+    <p class="lede">A media query wraps CSS rules that only apply when a condition is true — for example when the screen is 700 pixels wide or less. Together with flexbox, it turns a row of links into a column on a phone.</p>
+  </div>
+  <div class="card tight">
+    <h3>Anatomy of a media query</h3>
+    <p>Click each part of the rule.</p>
+    <div data-widget="mqAnatomy"></div>
+  </div>
+  <div class="lab">
+    <div class="lab-head">Resize the screen</div>
+    <div data-widget="mqNav"></div>
+  </div>
+  <div class="card tight">
+    <h3>Worked example — the slides' navigation demo</h3>
+    <div data-code="ex-f-media" data-load="1"></div>
+    <ol class="callouts">
+      <li><b>1</b><span><code>.link-flex-container</code> is a flex container, so the links sit in a row by default.</span></li>
+      <li><b>2</b><span>When the screen is 700px or less, the media query switches the main axis to <code>column</code> and the links stack.</span></li>
+      <li><b>3</b><span>The <code>a</code> rule styles each link — the flex items.</span></li>
+    </ol>
+  </div>
+  <div data-task="f-media"></div>
+</section>
+
+<section class="step" data-sec="flex" data-ph="evaluate" data-title="Build the store navigation" data-ws="f-cap">
+  <div class="step-head">
+    <h2>Show what you know: the store navigation</h2>
+    <p class="lede">Back to the challenge from the start of this section. Build the HCT Perfume Store header from the starter page — every requirement is checked as you type.</p>
+  </div>
+  <div class="banner">
+    <h3>The brief</h3>
+    <p>A header bar with the store name on the left and five links on the right. On a laptop the links sit in a row with even spacing; at 700px or less the header and the links stack in a column. Use <b>Phone</b> above the Output to test it.</p>
+  </div>
+  <div data-task="f-cap"></div>
+</section>
+
+<section class="step" data-sec="flex" data-ph="evaluate" data-title="Quiz &amp; exit ticket">
+  <div class="step-head">
+    <h2>Flexbox — check your understanding</h2>
+    <p class="lede">Five questions, then rate yourself and leave an exit ticket for your instructor.</p>
+  </div>
+  <div class="card tight">
+    <h3>Summary</h3>
+    <ul class="plain">
+      <li>Flexbox is a layout model that distributes space and aligns content inside a container, even when the size of the items is unknown or dynamic.</li>
+      <li>The parent with <code>display:flex</code> is the flex container; its direct children are the flex items.</li>
+      <li>Container properties: <code>display</code>, <code>flex-direction</code>, <code>flex-wrap</code>, <code>justify-content</code> (and <code>align-items</code>).</li>
+      <li>Responsive design uses the viewport tag, responsive images and media queries to look good on any screen.</li>
+    </ul>
+  </div>
+  <div data-quiz="fe1"></div>
+  <div data-quiz="fe2"></div>
+  <div data-quiz="fe3"></div>
+  <div data-quiz="fe4"></div>
+  <div data-quiz="fe5"></div>
+  <div data-selfassess="flex"></div>
+  <div data-ticket="flex"></div>
+</section>
+
+<!-- ======================================================= GRID -->
+<section class="step" data-sec="grid" data-ph="engage" data-title="The challenge" data-ws="g-engage">
+  <div class="step-head">
+    <h2>Rows <i>and</i> columns at the same time</h2>
+    <p class="lede">Think of a shop shelf, an egg box or a big table: everything sits in rows and columns that line up. CSS Grid gives a web page the same structure.</p>
+  </div>
+  <div class="bigq">
+    <div class="row"><div class="bq-lab">Big idea</div><div class="bq-val">A grid places content into rows and columns that line up in two directions.</div></div>
+    <div class="row"><div class="bq-lab">Essential question</div><div class="bq-val q">How can we arrange page content into rows and columns — and re-arrange them for a smaller screen?</div></div>
+  </div>
+  <div class="card tight">
+    <h3>Guiding questions</h3>
+    <ol class="plain">
+      <li>How does an element become a grid container?</li>
+      <li>How do I say how many columns there are, and how wide each one is?</li>
+      <li>What is an <code>fr</code>?</li>
+      <li>How do I put space between the cells — and change the number of columns on a phone?</li>
+    </ol>
+    <h3 style="margin-top:14px">Your challenge</h3>
+    <p>The HCT Perfume Store needs a <b>product catalogue</b>: a grid of perfume cards, three across on a laptop and two across on a phone.</p>
+  </div>
+  <div class="card tight">
+    <h3>First try</h3>
+    <p>The six product cards in the bench are stacked one under the other. In <code>style.css</code>, give <code>.grid-container</code> the two lines below and watch the Output.</p>
+    <div data-code="ex-g-engage"></div>
+  </div>
+  <div data-reflect="g-predict" data-q="Prediction — how many cards will sit in each row after you add those two lines? Why?"></div>
+  <div data-task="g-engage"></div>
+  <div data-reflect="g-notice" data-q="How is this different from what display:flex did to the navigation links?"></div>
+</section>
+
+<section class="step" data-sec="grid" data-ph="explore" data-title="display:grid &amp; columns" data-ws="g-columns">
+  <div class="step-head">
+    <h2><code>display: grid</code> and <code>grid-template-columns</code></h2>
+    <p class="lede">An element becomes a <b>grid container</b> when its <code>display</code> is <code>grid</code>. <code>grid-template-columns</code> then lists the columns — one value per column, separated by spaces. Rows are created automatically, as many as needed.</p>
+  </div>
+  <div class="lab">
+    <div class="lab-head">Column builder</div>
+    <div data-widget="gridColumns"></div>
+  </div>
+  <div class="card tight">
+    <h3>Worked example — four equal columns</h3>
+    <div data-code="ex-g-columns"></div>
+    <p>Four values means four columns. All four are <code>1fr</code>, so they are equal.</p>
+  </div>
+  <div data-task="g-columns"></div>
+</section>
+
+<section class="step" data-sec="grid" data-ph="explore" data-title="The fr unit" data-ws="g-fr">
+  <div class="step-head">
+    <h2>Fractions of the space: the <code>fr</code> unit</h2>
+    <p class="lede"><code>fr</code> stands for <b>fractional unit</b>. The browser adds up all the <code>fr</code> values and gives each column its share. <code>1fr 4fr</code> makes 5 parts in total: the first column gets 1 part, the second gets 4.</p>
+  </div>
+  <div class="lab">
+    <div class="lab-head">Share the width</div>
+    <div data-widget="gridFr"></div>
+  </div>
+  <div data-task="g-fr"></div>
+</section>
+
+<section class="step" data-sec="grid" data-ph="explore" data-title="gap" data-ws="g-gap">
+  <div class="step-head">
+    <h2>Space between cells: <code>gap</code></h2>
+    <p class="lede">The <code>gap</code> property (also written <code>grid-gap</code>) sets the size of the space between the rows and the columns. It never adds space around the outside edge — that is <code>padding</code>'s job.</p>
+  </div>
+  <div class="lab">
+    <div class="lab-head">Gap and padding</div>
+    <div data-widget="gridGap"></div>
+  </div>
+  <div data-task="g-gap"></div>
+</section>
+
+<section class="step" data-sec="grid" data-ph="explain" data-title="Grid vocabulary">
+  <div class="step-head">
+    <h2>Make sense of it: the parts of a grid</h2>
+    <p class="lede">Name the parts and the rest of Grid becomes easy to read. Click each term.</p>
+  </div>
+  <div class="lab">
+    <div class="lab-head">Grid anatomy</div>
+    <div data-widget="gridAnatomy"></div>
+  </div>
+  <div class="card tight">
+    <h3>Grid or table?</h3>
+    <p>A grid looks like a table, but it is a <b>layout</b> tool: the HTML stays a simple list of boxes, and CSS decides how many columns there are. Change one line of CSS and the same HTML becomes two columns, or one. A <code>&lt;table&gt;</code> is for <b>data</b> — its rows and columns are fixed in the HTML.</p>
+  </div>
+  <div data-quiz="gq1"></div>
+  <div data-quiz="gq2"></div>
+  <div data-quiz="gq3"></div>
+  <div data-reflect="g-explain" data-q="Explain to a classmate what grid-template-columns: 2fr 1fr 1fr; does. Use the word “fraction”."></div>
+</section>
+
+<section class="step" data-sec="grid" data-ph="elaborate" data-title="Build the perfume grid" data-ws="g-perfume">
+  <div class="step-head">
+    <h2>The slides' example: a perfume catalogue</h2>
+    <p class="lede">Now put the three grid properties together with some item styling, exactly like the example in Chapter 6.</p>
+  </div>
+  <div class="card tight">
+    <h3>Worked example — the CSS from the slides</h3>
+    <div data-code="ex-g-perfume"></div>
+    <ol class="callouts">
+      <li><b>1</b><span><code>display:grid</code> makes the items inside the container display in a grid format.</span></li>
+      <li><b>2</b><span>Three <code>1fr</code> values: three columns, and as many rows as needed.</span></li>
+      <li><b>3</b><span><code>.grid-item</code> formats every cell: a soft background, centred text and padding.</span></li>
+    </ol>
+  </div>
+  <div data-task="g-perfume"></div>
+</section>
+
+<section class="step" data-sec="grid" data-ph="elaborate" data-title="Responsive grid" data-ws="g-resp">
+  <div class="step-head">
+    <h2>Fewer columns on a smaller screen</h2>
+    <p class="lede">For a responsive grid you need two things: images that shrink with their cell, and a media query that changes <code>grid-template-columns</code> when the screen is narrow.</p>
+  </div>
+  <div class="lab">
+    <div class="lab-head">Resize the screen</div>
+    <div data-widget="gridResp"></div>
+  </div>
+  <div class="card tight">
+    <h3>Worked example</h3>
+    <div data-code="ex-g-resp"></div>
+    <div class="note"><b>Only what changes goes inside the media query.</b> <code>display:grid</code> and <code>gap</code> still come from the main rule — the query just overrides the columns.</div>
+  </div>
+  <div data-task="g-resp"></div>
+</section>
+
+<section class="step" data-sec="grid" data-ph="evaluate" data-title="Quiz &amp; exit ticket">
+  <div class="step-head">
+    <h2>Grid — check your understanding</h2>
+    <p class="lede">Five questions, then rate yourself and leave an exit ticket for your instructor.</p>
+  </div>
+  <div class="card tight">
+    <h3>Summary</h3>
+    <ul class="plain">
+      <li>CSS Grid creates a grid-like, two-dimensional structure of rows and columns on a web page.</li>
+      <li><code>display:grid</code> makes a grid container; <code>grid-template-columns</code> sets the number and width of the columns.</li>
+      <li><code>fr</code> is a fraction of the available space; <code>gap</code> is the space between rows and columns.</li>
+      <li>A media query that changes <code>grid-template-columns</code> makes the grid responsive.</li>
+    </ul>
+  </div>
+  <div data-quiz="ge1"></div>
+  <div data-quiz="ge2"></div>
+  <div data-quiz="ge3"></div>
+  <div data-quiz="ge4"></div>
+  <div data-quiz="ge5"></div>
+  <div data-selfassess="grid"></div>
+  <div data-ticket="grid"></div>
+</section>
+
+<!-- ======================================================= INTEGRATION -->
+<section class="step" data-sec="int" data-ph="engage" data-title="The challenge">
+  <div class="step-head">
+    <h2>One tool, or both?</h2>
+    <p class="lede">Real pages need both: a row of links in the header, a sidebar beside the content, a gallery of products inside it. Flexbox and Grid complement each other.</p>
+  </div>
+  <div class="bigq">
+    <div class="row"><div class="bq-lab">Big idea</div><div class="bq-val">Flexbox for one dimension, Grid for two — nested together to build a whole page.</div></div>
+    <div class="row"><div class="bq-lab">Essential question</div><div class="bq-val q">How do I decide between Flexbox and Grid, and how do they work together on one page?</div></div>
+  </div>
+  <div class="card tight">
+    <h3>Guiding questions</h3>
+    <ol class="plain">
+      <li>What does “one-dimensional” and “two-dimensional” mean for a layout?</li>
+      <li>Can a flex item also be a grid container?</li>
+      <li>Can I read CSS and draw the page before I run it?</li>
+    </ol>
+    <h3 style="margin-top:14px">Your challenge</h3>
+    <p>Build the complete <b>HCT Perfume Store</b> home page: a flex header, a sidebar beside a grid of products, all responsive. That is the capstone at the end of this section.</p>
+  </div>
+  <div class="lab">
+    <div class="lab-head">Quick sort — Flex or Grid?</div>
+    <div data-widget="sorter"></div>
+  </div>
+  <div data-reflect="i-predict" data-q="Look at any website you use daily. Where would you use Flexbox, and where Grid?"></div>
+</section>
+
+<section class="step" data-sec="int" data-ph="explore" data-title="Same items, two layouts" data-ws="i-compare">
+  <div class="step-head">
+    <h2>Flexbox vs. Grid, side by side</h2>
+    <p class="lede">Flexbox excels at distributing space along <b>one direction</b>. Grid controls <b>both directions together</b>, so the columns line up from row to row.</p>
+  </div>
+  <div class="lab">
+    <div class="lab-head">Same six items</div>
+    <div data-widget="compare"></div>
+  </div>
+  <div data-task="i-compare"></div>
+</section>
+
+<section class="step" data-sec="int" data-ph="explore" data-title="Nesting flex &amp; grid" data-ws="i-nest">
+  <div class="step-head">
+    <h2>A flex item that is also a grid container</h2>
+    <p class="lede">The example from Chapter 7: a flex container with two items — a sidebar and an image area. The image area is <b>also</b> a grid container for the images. One element, two roles.</p>
+  </div>
+  <div class="card tight">
+    <h3>Worked example — the HTML</h3>
+    <div data-code="ex-i-nest-html"></div>
+    <h3 style="margin-top:14px">…and the CSS</h3>
+    <div data-code="ex-i-nest-css"></div>
+  </div>
+  <div data-task="i-nest"></div>
+</section>
+
+<section class="step" data-sec="int" data-ph="explain" data-title="Who is the parent?">
+  <div class="step-head">
+    <h2>Make sense of it: containers inside containers</h2>
+    <p class="lede">Every layout property works on <b>direct children</b> only. To read a nested layout, ask “who is the parent?” for every box.</p>
+  </div>
+  <div class="lab">
+    <div class="lab-head">Click an element</div>
+    <div data-widget="nestTree"></div>
+  </div>
+  <div class="card">
+    <h3>Flexbox or Grid?</h3>
+    <div class="scroller">
+      <table class="ref">
+        <tr><th></th><th>Flexbox</th><th>Grid</th></tr>
+        <tr><td>Dimensions</td><td>One — a row <b>or</b> a column</td><td>Two — rows <b>and</b> columns</td></tr>
+        <tr><td>Starts with</td><td><code>display:flex</code></td><td><code>display:grid</code></td></tr>
+        <tr><td>Sizes come from</td><td>The content of each item</td><td>The tracks you define (<code>fr</code>, px, %)</td></tr>
+        <tr><td>Best for</td><td>Nav bars, toolbars, a sidebar beside content, centring</td><td>Galleries, catalogues, card grids, whole-page structure</td></tr>
+        <tr><td>Responsive switch</td><td><code>flex-direction: column</code></td><td>Fewer columns in <code>grid-template-columns</code></td></tr>
+      </table>
+    </div>
+  </div>
+  <div data-quiz="iq1"></div>
+  <div data-quiz="iq2"></div>
+  <div data-quiz="iq3"></div>
+  <div data-reflect="i-explain" data-q="Why can .grid-con be a flex item and a grid container at the same time?"></div>
+</section>
+
+<section class="step" data-sec="int" data-ph="elaborate" data-title="Draw the output" data-ws="i-draw">
+  <div class="step-head">
+    <h2>Read the code, draw the page</h2>
+    <p class="lede">Activity 2 from Chapter 7: a developer should be able to picture the output before running the code. Pick the sketch that matches each snippet, then press <b>Run it</b> to check in the bench.</p>
+  </div>
+  <div data-quiz="dr1"></div>
+  <div data-quiz="dr2"></div>
+  <div data-quiz="dr3"></div>
+</section>
+
+<section class="step" data-sec="int" data-ph="elaborate" data-title="Responsive integration" data-ws="i-resp">
+  <div class="step-head">
+    <h2>Make the nested layout responsive</h2>
+    <p class="lede">One media query can change both layouts at once: the flex container switches to a column, and the grid inside it drops to two columns.</p>
+  </div>
+  <div class="lab">
+    <div class="lab-head">Resize the screen</div>
+    <div data-widget="intResp"></div>
+  </div>
+  <div data-task="i-resp"></div>
+</section>
+
+<section class="step" data-sec="int" data-ph="evaluate" data-title="Capstone: store home page" data-ws="i-cap">
+  <div class="step-head">
+    <h2>Capstone: the HCT Perfume Store home page</h2>
+    <p class="lede">Everything from the three chapters on one page. The HTML is written for you — this capstone is about the CSS. The checker tests every requirement as you type.</p>
+  </div>
+  <div class="banner">
+    <h3>The brief</h3>
+    <p>A <b>flex header</b> (store name left, links right), a <b>flex page</b> with a sidebar beside the products, and a <b>grid of six products</b> with three columns. At 700px or less: the header and the page stack, and the products drop to two columns. Pop the bench out for more room, and use <b>Phone</b> to test.</p>
+  </div>
+  <div data-task="i-cap"></div>
+</section>
+
+<section class="step" data-sec="int" data-ph="evaluate" data-title="Final quiz &amp; exit ticket">
+  <div class="step-head">
+    <h2>Flexbox + Grid — check your understanding</h2>
+    <p class="lede">The last five questions, a self-assessment, your exit ticket — and your lab report.</p>
+  </div>
+  <div data-quiz="ie1"></div>
+  <div data-quiz="ie2"></div>
+  <div data-quiz="ie3"></div>
+  <div data-quiz="ie4"></div>
+  <div data-quiz="ie5"></div>
+  <div data-selfassess="int"></div>
+  <div data-ticket="int"></div>
+  <div class="card">
+    <h3>Your lab result</h3>
+    <div data-widget="scoreCard"></div>
+    <div class="actions"><button class="btn primary" type="button" id="reportBtn">Download my lab report</button></div>
+  </div>
+</section>
+
+<!-- ======================================================= WRAP -->
+<section class="step" data-sec="wrap" data-ph="start" data-title="Reference sheet">
+  <div class="step-head">
+    <div class="step-kicker"><span class="phase-tag">Wrap-up</span></div>
+    <h2>Reference sheet</h2>
+    <p class="lede">Everything from this lab on one screen.</p>
+  </div>
+  <div class="card">
+    <h3>Flexbox</h3>
+    <div class="scroller"><table class="ref">
+      <tr><th>Property</th><th>Purpose</th></tr>
+      <tr><td>display:flex</td><td>Makes the element a flex container; its direct children become flex items.</td></tr>
+      <tr><td>flex-direction</td><td><code>row</code> (default) stacks items left to right; <code>column</code> top to bottom.</td></tr>
+      <tr><td>flex-wrap</td><td><code>nowrap</code> (default) keeps one line; <code>wrap</code> lets items move to the next line.</td></tr>
+      <tr><td>justify-content</td><td>Aligns items along the main axis: <code>center</code>, <code>space-between</code>, …</td></tr>
+      <tr><td>align-items</td><td>Aligns items along the cross axis.</td></tr>
+    </table></div>
+  </div>
+  <div class="card">
+    <h3>Grid</h3>
+    <div class="scroller"><table class="ref">
+      <tr><th>Property</th><th>Purpose</th></tr>
+      <tr><td>display:grid</td><td>Makes the element a grid container.</td></tr>
+      <tr><td>grid-template-columns</td><td>Number and width of columns, e.g. <code>1fr 1fr 1fr</code> or <code>1fr 4fr</code>.</td></tr>
+      <tr><td>fr</td><td>Fractional unit: a share of the free space.</td></tr>
+      <tr><td>gap / grid-gap</td><td>Space between rows and columns.</td></tr>
+    </table></div>
+  </div>
+  <div class="card">
+    <h3>Responsive design</h3>
+    <div class="scroller"><table class="ref">
+      <tr><th>Code</th><th>Purpose</th></tr>
+      <tr><td>&lt;meta name="viewport" …&gt;</td><td>Tells phones to use their real width. Put it in every page's head.</td></tr>
+      <tr><td>max-width:100%</td><td>Image scales down with its container but never above its original size.</td></tr>
+      <tr><td>@media screen and (max-width:700px)</td><td>Rules inside apply only when the screen is 700px wide or less.</td></tr>
+    </table></div>
+  </div>
+  <div class="card tight">
+    <h3>Key terms</h3>
+    <dl class="kv">
+      <dt>flex container</dt><dd>An element with display:flex.</dd>
+      <dt>flex item</dt><dd>A direct child of a flex container.</dd>
+      <dt>main / cross axis</dt><dd>The direction of flow, and the direction across it.</dd>
+      <dt>grid container</dt><dd>An element with display:grid.</dd>
+      <dt>track</dt><dd>One column (or row) of a grid.</dd>
+      <dt>fr</dt><dd>Fractional unit.</dd>
+      <dt>RWD</dt><dd>Responsive web design.</dd>
+      <dt>media query</dt><dd>A rule that applies CSS only when a condition is true.</dd>
+    </dl>
+  </div>
+</section>
+
+  </div>
+  </main>
+
+  <!-- ======================================================= THE DOCK -->
+  <aside class="dock" id="dock" aria-label="Code bench">
+    <div class="dock-resize" id="dockResize" title="Drag to resize" aria-hidden="true"></div>
+    <div class="dock-top">
+      <div class="dock-title" id="dockTitle">Code bench</div>
+      <button class="icon-btn" type="button" data-d="run" title="Run (Ctrl+Enter)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9-5.5z"/></svg>Run</button>
+      <button class="icon-btn" type="button" data-d="reset" title="Put the starter code back"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8a5 5 0 1 0 1.5-3.6M3 2.5v2.8h2.8"/></svg>Reset</button>
+      <button class="icon-btn accent dock-only" type="button" data-d="max" title="Open the bench full screen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9.5 2.5h4v4M6.5 13.5h-4v-4M13.5 2.5 9 7M2.5 13.5 7 9"/></svg>Pop out</button>
+      <button class="icon-btn max-only" type="button" data-d="brief" title="Show or hide the task panel"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 3h11M2.5 8h11M2.5 13h7"/></svg>Task</button>
+      <button class="icon-btn accent max-only" type="button" data-d="min" title="Return the bench to the right side (Esc)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13.5 6.5h-4v-4M2.5 9.5h4v4M9.5 6.5 14 2M6.5 9.5 2 14"/></svg>Dock back</button>
+    </div>
+    <div class="dock-body" id="dockBody">
+      <div class="max-brief" id="maxBrief"></div>
+      <div class="dpane ed" id="edPane">
+        <div class="ptabs" role="tablist">
+          <button class="ptab" type="button" role="tab" data-f="html" aria-selected="true"><span class="fdot"></span>index.html</button>
+          <button class="ptab" type="button" role="tab" data-f="css" aria-selected="false"><span class="fdot"></span>style.css</button>
+        </div>
+        <div class="edwrap">
+          <div class="gutter" id="gutter" aria-hidden="true">1</div>
+          <textarea class="editor" id="editor" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code editor"></textarea>
+        </div>
+      </div>
+      <div class="dsplit" id="dsplit" title="Drag to resize" aria-hidden="true"></div>
+      <div class="dpane out">
+        <div class="outhead">Output
+          <button class="mini" type="button" data-dev="desktop" aria-pressed="true">Desktop</button>
+          <button class="mini" type="button" data-dev="tablet" aria-pressed="false">Tablet 768</button>
+          <button class="mini" type="button" data-dev="phone" aria-pressed="false">Phone 375</button>
+          <span class="w" id="outW"></span>
+        </div>
+        <div class="stage" id="stage" data-dev="desktop"><iframe class="preview" id="preview" title="Live output"></iframe></div>
+      </div>
+    </div>
+    <div class="dock-foot"><span class="live">Live — updates as you type</span><span class="tick" id="dockTick"></span></div>
+  </aside>
+</div>
+
+<!-- hidden fixed-width renderers used only for checking work -->
+<div aria-hidden="true" style="position:absolute;left:-10000px;top:0;width:1024px;height:0;overflow:hidden">
+  <iframe id="chkWide" tabindex="-1" style="width:1024px;height:900px;border:0"></iframe>
+  <iframe id="chkNarrow" tabindex="-1" style="width:600px;height:900px;border:0"></iframe>
+</div>
+<script>
+/* ===================== virtual image files ===================== */
+var ASSETS = (function(){
+  function uri(svg){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)}
+  function bottle(c1,c2,w,h){
+    w=w||220;h=h||260;
+    return uri('<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'" viewBox="0 0 220 260">'+
+      '<rect width="220" height="260" fill="#fbf6ef"/>'+
+      '<rect x="92" y="28" width="36" height="30" rx="4" fill="'+c2+'"/>'+
+      '<rect x="100" y="56" width="20" height="16" fill="#c9b8a0"/>'+
+      '<rect x="56" y="72" width="108" height="150" rx="22" fill="'+c1+'" opacity=".9"/>'+
+      '<rect x="68" y="84" width="22" height="120" rx="10" fill="#fff" opacity=".25"/>'+
+      '<rect x="78" y="128" width="64" height="40" rx="4" fill="#fff" opacity=".85"/>'+
+      '<text x="110" y="153" font-family="Georgia,serif" font-size="13" text-anchor="middle" fill="#5a4630">HCT</text></svg>');
+  }
+  function photo(c1,c2,n){
+    return uri('<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150">'+
+      '<rect width="150" height="150" fill="'+c1+'"/><circle cx="110" cy="42" r="18" fill="#fff" opacity=".7"/>'+
+      '<path d="M0 150 L50 80 L85 120 L110 95 L150 140 L150 150Z" fill="'+c2+'"/>'+
+      '<text x="12" y="28" font-family="Arial" font-size="16" font-weight="bold" fill="#fff">Image '+n+'</text></svg>');
+  }
+  return {
+    'perfume.jpg':bottle('#c98f9d','#3b2d2a'),
+    'perfume1.jpg':bottle('#c98f9d','#3b2d2a'),
+    'perfume2.jpg':bottle('#8fb3c9','#1f3442'),
+    'perfume3.jpg':bottle('#d9b56a','#4a3713'),
+    'perfume4.jpg':bottle('#9fc4a5','#203a26'),
+    'perfume5.jpg':bottle('#b39ad1','#2f2342'),
+    'perfume6.jpg':bottle('#e2a07b','#46281a'),
+    'perfume-big.jpg':bottle('#c98f9d','#3b2d2a',400,470),
+    'banner.jpg':uri('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="260" viewBox="0 0 800 260"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#0d6b6b"/><stop offset="1" stop-color="#c98f9d"/></linearGradient></defs><rect width="800" height="260" fill="url(#g)"/><text x="400" y="120" font-family="Georgia,serif" font-size="44" text-anchor="middle" fill="#fff">HCT Perfume Store</text><text x="400" y="170" font-family="Arial" font-size="20" text-anchor="middle" fill="#fff" opacity=".85">800 pixels wide</text></svg>'),
+    'img1.jpg':photo('#5b8db8','#2f5f7e',1),'img2.jpg':photo('#d38b5d','#8a4a24',2),'img3.jpg':photo('#6aa77a','#2f6b40',3),
+    'img4.jpg':photo('#9b7cc4','#58408a',4),'img5.jpg':photo('#d1b25a','#86701f',5),'img6.jpg':photo('#c4677a','#7c2d3c',6)
+  };
+})();
+
+/* ===================== page builder for starter / solution code ===================== */
+function page(title,body,headExtra){
+  return '<!DOCTYPE html>\n<html>\n<head>\n'+(headExtra||'')+
+    '  <title>'+title+'</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n'+body+'</body>\n</html>';
+}
+var VIEWPORT='  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n';
+function rep(s,n){var o='';for(var i=0;i<n;i++)o+=s(i);return o}
+var PERF=[['Rose Oud','245'],['Ocean Musk','190'],['Amber Gold','320'],['Fresh Vetiver','210'],['Violet Night','275'],['Saffron Dusk','299']];
+function perfItems(n,ind){ind=ind||'    ';return rep(function(i){return ind+'<div class="grid-item">\n'+ind+'  <img src="perfume'+(i+1)+'.jpg"><br> '+PERF[i][0]+'<br>'+PERF[i][1]+' AED\n'+ind+'</div>\n'},n)}
+
+/* ===================== code samples shown in the steps ===================== */
+var C = {};
+C['ex-f-container'] = {label:'style.css', code:
+'.cards {\n  display: flex;      /* 1 — the parent becomes a flex container */\n}\n\n.card {               /* 2 — every direct child is a flex item */\n  background-color: lightsteelblue;\n  padding: 15px;\n  margin: 10px;\n}'};
+C['ex-f-direction'] = {label:'style.css', code:
+'.flex-container {\n  display: flex;\n  flex-direction: row;     /* left to right (default) */\n}\n\n.flex-container {\n  display: flex;\n  flex-direction: column;  /* top to bottom */\n}'};
+C['ex-viewport'] = {label:'index.html — inside <head>', code:'<meta name="viewport" content="width=device-width, initial-scale=1.0">'};
+C['ex-f-media'] = {label:'style.css', code:
+'.link-flex-container {\n  display: flex;\n}\n\n@media screen and (max-width:700px) {\n  .link-flex-container {\n    flex-direction: column;\n  }\n}\n\na {\n  margin: 10px;\n  padding: 10px;\n  font-size: 14px;\n  font-family: arial;\n  color: white;\n  text-decoration: none;\n  width: 100px;\n  text-align: center;\n  background-color: DodgerBlue;\n}'};
+C['ex-g-engage'] = {label:'style.css', code:'.grid-container {\n  display: grid;\n  grid-template-columns: 1fr 1fr 1fr;\n}'};
+C['ex-g-columns'] = {label:'style.css', code:'.grid-container {\n  display: grid;\n  grid-template-columns: 1fr 1fr 1fr 1fr;\n}'};
+C['ex-g-perfume'] = {label:'style.css', code:
+'.grid-container {\n  display: grid;  /* items inside display in a grid format */\n  grid-template-columns: 1fr 1fr 1fr;  /* 3 columns, as many rows as needed */\n  gap: 20px;  /* gap between cells */\n}\n.grid-item {  /* to format the grid items */\n  background-color: rgb(243, 228, 209);\n  text-align: center;\n  padding: 20px;\n}'};
+C['ex-g-resp'] = {label:'style.css', code:
+'img {\n  max-width: 100%;  /* image shrinks with its cell */\n}\n\n@media screen and (max-width:700px) {\n  .grid-container {\n    grid-template-columns: 1fr 1fr;\n    /* 2 columns only, for screens 700px or less */\n  }\n}'};
+C['ex-i-nest-html'] = {label:'index.html', code:
+'<div class="flex-con"> <!-- flex container has 2 flex items: side and grid-con -->\n\n  <div class="side"> <!-- first flex item -->\n    <h2>Sidebar</h2>\n    <p>Content in the sidebar.</p>\n  </div>\n\n  <div class="grid-con"> <!-- second flex item, and a grid container for the images -->\n    <img src="img1.jpg" alt="Image 1">\n    <img src="img2.jpg" alt="Image 2">\n    <img src="img3.jpg" alt="Image 3">\n    ...\n  </div>\n\n</div>'};
+C['ex-i-nest-css'] = {label:'style.css', code:
+'.flex-con {\n  display: flex;           /* Flexbox puts the sidebar and the grid side by side */\n  flex-direction: row;\n  background-color: lightsalmon;\n  padding: 20px;\n}\n.side {                    /* formatting the sidebar */\n  background-color: lightsteelblue;\n  padding: 20px;\n}\n.grid-con {\n  display: grid;           /* Grid for the images */\n  grid-template-columns: 1fr 1fr 1fr;  /* 3 columns */\n  gap: 20px;               /* gap between grid items */\n  background-color: white;\n  padding: 20px;\n}'};
+
+/* ===================== workspaces (one per practical step) ===================== */
+var NAVLINKS=['Home','Perfumes','Offers','About us','Contact'];
+var WS = {};
+
+WS['intro'] = {
+  html: page('My first layout','  <h1>Hello, CSS layouts!</h1>\n  <p>Three boxes, ready to be arranged.</p>\n  <div class="box">One</div>\n  <div class="box">Two</div>\n  <div class="box">Three</div>\n'),
+  css: 'body {\n  font-family: Arial, sans-serif;\n}\n\nh1 {\n  color: teal;\n}\n\n.box {\n  background-color: #d8ebea;\n  border: 2px solid teal;\n  padding: 14px;\n  margin: 6px;\n}'
+};
+
+WS['f-engage'] = {
+  html: page('Store navigation','  <div class="nav">\n'+rep(function(i){return '    <div>'+NAVLINKS[i]+'</div>\n'},5)+'  </div>\n'),
+  css: '.nav {\n  background-color: #152530;\n  padding: 10px;\n  /* add display: flex; on the next line */\n\n}\n\n.nav div {\n  color: white;\n  font-family: Arial, sans-serif;\n  padding: 10px 16px;\n}',
+  task: 'f-engage'
+};
+
+WS['f-container'] = {
+  html: page('Best sellers','  <h1>Our best sellers</h1>\n  <div class="cards">\n'+
+    rep(function(i){return '    <div class="card">\n      <h3>'+PERF[i][0]+'</h3>\n      <p>'+PERF[i][1]+' AED</p>\n    </div>\n'},3)+'  </div>\n'),
+  css: 'body {\n  font-family: Arial, sans-serif;\n}\n\n.cards {\n\n}\n\n.card {\n  border: 2px solid #0d6b6b;\n  padding: 15px;\n  margin: 10px;\n}',
+  task: 'f-container'
+};
+
+WS['f-direction'] = {
+  html: page('Direction','  <h2>Toolbar</h2>\n  <div class="toolbar">\n    <span>Bold</span>\n    <span>Italic</span>\n    <span>Underline</span>\n    <span>Link</span>\n  </div>\n\n  <h2>Side menu</h2>\n  <div class="menu">\n    <a href="#">Dashboard</a>\n    <a href="#">Courses</a>\n    <a href="#">Grades</a>\n    <a href="#">Settings</a>\n  </div>\n'),
+  css: 'body {\n  font-family: Arial, sans-serif;\n}\n\n.toolbar {\n  display: flex;\n}\n\n.menu {\n  display: flex;\n}\n\n.toolbar span, .menu a {\n  background-color: #e9eef1;\n  border: 1px solid #ccd5db;\n  padding: 8px 14px;\n  margin: 3px;\n  color: #152530;\n  text-decoration: none;\n}',
+  task: 'f-direction'
+};
+
+var TAGS=['HTML','CSS','Flexbox','Grid','Responsive','Media queries','Images','Layout','Viewport','Design'];
+WS['f-wrap'] = {
+  html: page('Tags','  <h2>Lab tags</h2>\n  <div class="tags">\n'+rep(function(i){return '    <span class="tag">'+TAGS[i]+'</span>\n'},10)+'  </div>\n'),
+  css: 'body {\n  font-family: Arial, sans-serif;\n}\n\n.tags {\n  display: flex;\n  width: 320px;\n  border: 2px dashed #0d6b6b;\n  padding: 6px;\n}\n\n.tag {\n  background-color: #0d6b6b;\n  color: white;\n  padding: 6px 12px;\n  margin: 4px;\n  border-radius: 20px;\n  white-space: nowrap;\n}',
+  task: 'f-wrap'
+};
+
+WS['f-justify'] = {
+  html: page('Alignment','  <div class="top">\n    <div class="logo">HCT</div>\n    <div class="links">Home · Perfumes · Contact</div>\n  </div>\n\n  <div class="bottom">\n    <p>Privacy</p>\n    <p>Terms</p>\n    <p>Help</p>\n  </div>\n'),
+  css: 'body {\n  font-family: Arial, sans-serif;\n}\n\n.top {\n  display: flex;\n  height: 90px;\n  background-color: #152530;\n  color: white;\n  padding: 0 20px;\n}\n\n.logo {\n  font-size: 28px;\n  font-weight: bold;\n}\n\n.bottom {\n  display: flex;\n  background-color: #e9eef1;\n}\n\n.bottom p {\n  margin: 10px 16px;\n}',
+  task: 'f-justify'
+};
+
+WS['f-rwd'] = {
+  html: page('Responsive image','  <div class="frame">\n    <h2>New arrivals</h2>\n    <img src="banner.jpg" alt="Store banner">\n    <p>The banner is 800 pixels wide. The frame is narrower.</p>\n  </div>\n'),
+  css: 'body {\n  font-family: Arial, sans-serif;\n}\n\n.frame {\n  width: 60%;\n  border: 2px dashed #0d6b6b;\n  padding: 10px;\n}\n\nimg {\n\n}',
+  task: 'f-rwd'
+};
+
+var SLIDENAV='  <div class="link-flex-container">\n    <a href="index.html">Home</a>\n    <a href="catalog.html">Catalog</a>\n    <a href="cart.html">Add to Cart</a>\n    <a href="about.html">About us</a>\n    <a href="login.html">Log in</a>\n  </div>\n';
+var SLIDEA='a {\n  margin: 10px;\n  padding: 10px;\n  font-size: 14px;\n  font-family: arial;\n  color: white;\n  text-decoration: none;\n  width: 100px;\n  text-align: center;\n  background-color: DodgerBlue;\n}';
+WS['f-media'] = {
+  html: page('Flex-box, Media Query Demo on Navigation',SLIDENAV,VIEWPORT),
+  css: '.link-flex-container {\n  display: flex;\n}\n\n/* add your media query here */\n\n\n'+SLIDEA,
+  task: 'f-media'
+};
+
+WS['f-cap'] = {
+  html: page('HCT Perfume Store','  <header class="site">\n    <div class="brand">HCT Perfume Store</div>\n    <nav class="links">\n'+
+    rep(function(i){return '      <a href="#">'+NAVLINKS[i]+'</a>\n'},5)+'    </nav>\n  </header>\n\n  <h1>Welcome</h1>\n  <p>Fragrances from around the world.</p>\n'),
+  css: 'body {\n  margin: 0;\n  font-family: Arial, sans-serif;\n}\n\n.site {\n  background-color: #3b2d2a;\n  padding: 12px 20px;\n}\n\n.brand {\n  color: #f3e4d1;\n  font-size: 22px;\n  font-weight: bold;\n}\n\n.links a {\n  color: white;\n  padding: 8px 12px;\n}\n\nh1, p {\n  padding: 0 20px;\n}',
+  task: 'f-cap'
+};
+
+WS['g-engage'] = {
+  html: page('Perfume catalogue','  <h1>Perfume catalogue</h1>\n  <div class="grid-container">\n'+perfItems(6)+'  </div>\n'),
+  css: 'body {\n  font-family: Arial, sans-serif;\n}\n\n.grid-container {\n\n}\n\n.grid-item {\n  background-color: rgb(243, 228, 209);\n  text-align: center;\n  padding: 12px;\n  margin: 4px;\n}\n\nimg {\n  max-width: 100%;\n}',
+  task: 'g-engage'
+};
+
+WS['g-columns'] = {
+  html: page('Columns','  <div class="grid-container">\n'+rep(function(i){return '    <div class="grid-item">'+(i+1)+'</div>\n'},8)+'  </div>\n'),
+  css: 'body {\n  font-family: Arial, sans-serif;\n}\n\n.grid-container {\n  display: grid;\n  gap: 10px;\n  background-color: #dde7f5;\n  padding: 10px;\n}\n\n.grid-item {\n  background-color: #2c5b98;\n  color: white;\n  font-size: 22px;\n  text-align: center;\n  padding: 20px;\n}',
+  task: 'g-columns'
+};
+
+WS['g-fr'] = {
+  html: page('Sidebar layout','  <div class="layout">\n    <div class="side">Menu</div>\n    <div class="content">\n      <h2>Content</h2>\n      <p>This column should be four times as wide as the menu.</p>\n    </div>\n  </div>\n'),
+  css: 'body {\n  font-family: Arial, sans-serif;\n}\n\n.layout {\n  display: grid;\n  gap: 10px;\n}\n\n.side {\n  background-color: lightsteelblue;\n  padding: 15px;\n}\n\n.content {\n  background-color: #f3e4d1;\n  padding: 15px;\n}',
+  task: 'g-fr'
+};
+
+WS['g-gap'] = {
+  html: page('Gap','  <div class="grid-container">\n'+rep(function(i){return '    <div class="grid-item">'+(i+1)+'</div>\n'},6)+'  </div>\n'),
+  css: 'body {\n  font-family: Arial, sans-serif;\n}\n\n.grid-container {\n  display: grid;\n  grid-template-columns: 1fr 1fr 1fr;\n  background-color: #dde7f5;\n}\n\n.grid-item {\n  background-color: #2c5b98;\n  color: white;\n  font-size: 22px;\n  text-align: center;\n  padding: 20px;\n}',
+  task: 'g-gap'
+};
+
+WS['g-perfume'] = {
+  html: page('Perfume shop','  <div class="grid-container">\n'+perfItems(6)+'  </div>\n'),
+  css: 'body {\n  font-family: Arial, sans-serif;\n}\n\nimg {\n  max-width: 100%;\n}\n\n.grid-container {\n\n}\n\n.grid-item {\n\n}',
+  task: 'g-perfume'
+};
+
+var PERF_CSS='body {\n  font-family: Arial, sans-serif;\n}\n\n.grid-container {\n  display: grid;\n  grid-template-columns: 1fr 1fr 1fr;\n  gap: 20px;\n}\n\n.grid-item {\n  background-color: rgb(243, 228, 209);\n  text-align: center;\n  padding: 20px;\n}';
+WS['g-resp'] = {
+  html: page('Responsive grid','  <div class="grid-container">\n'+perfItems(6).replace(/perfume\d\.jpg/g,'perfume-big.jpg')+'  </div>\n',VIEWPORT),
+  css: PERF_CSS+'\n\n/* 1. make the images responsive */\n\n\n/* 2. add the media query */\n',
+  task: 'g-resp'
+};
+
+WS['i-compare'] = {
+  html: page('Flex vs Grid','  <h3>A row of chips (one dimension)</h3>\n  <div class="row">\n'+rep(function(i){return '    <div class="chip">'+['New','Women','Men','Gifts','Sale'][i]+'</div>\n'},5)+'  </div>\n\n  <h3>A board of tiles (two dimensions)</h3>\n  <div class="board">\n'+rep(function(i){return '    <div class="tile">Tile '+(i+1)+'</div>\n'},6)+'  </div>\n'),
+  css: 'body {\n  font-family: Arial, sans-serif;\n}\n\n.row {\n\n}\n\n.board {\n\n}\n\n.chip {\n  background-color: #0d6b6b;\n  color: white;\n  padding: 6px 14px;\n  margin: 4px;\n  border-radius: 20px;\n}\n\n.tile {\n  background-color: #2c5b98;\n  color: white;\n  padding: 24px;\n  text-align: center;\n}',
+  task: 'i-compare'
+};
+
+var NEST_HTML=page('Flex and Grid','  <div class="flex-con">\n\n    <div class="side">\n      <h2>Sidebar</h2>\n      <p>Content in the sidebar.</p>\n    </div>\n\n    <div class="grid-con">\n'+
+  rep(function(i){return '      <img src="img'+(i+1)+'.jpg" alt="Image '+(i+1)+'">\n'},6)+'    </div>\n\n  </div>\n',VIEWPORT);
+var NEST_CSS='.flex-con {\n  display: flex;\n  flex-direction: row;\n  background-color: lightsalmon;\n  padding: 20px;\n}\n\n.side {\n  background-color: lightsteelblue;\n  padding: 20px;\n}\n\n.grid-con {\n  display: grid;\n  grid-template-columns: 1fr 1fr 1fr;\n  gap: 20px;\n  background-color: white;\n  padding: 20px;\n}\n\nimg {\n  max-width: 100%;\n}';
+WS['i-nest'] = {
+  html: NEST_HTML,
+  css: 'body {\n  font-family: Arial, sans-serif;\n}\n\nimg {\n  max-width: 100%;\n}\n\n.flex-con {\n\n}\n\n.side {\n\n}\n\n.grid-con {\n\n}',
+  task: 'i-nest'
+};
+
+WS['i-draw'] = {
+  html: page('Draw the output','  <p>Press <b>Run it</b> under a question to load its code here.</p>\n'),
+  css: 'body {\n  font-family: Arial, sans-serif;\n}'
+};
+
+WS['i-resp'] = {
+  html: NEST_HTML,
+  css: 'body {\n  font-family: Arial, sans-serif;\n}\n\n'+NEST_CSS+'\n\n/* add one media query that changes both layouts */\n',
+  task: 'i-resp'
+};
+
+WS['i-cap'] = {
+  html: page('HCT Perfume Store',
+    '  <header class="site">\n    <div class="brand">HCT Perfume Store</div>\n    <nav class="links">\n      <a href="#">Home</a>\n      <a href="#">Women</a>\n      <a href="#">Men</a>\n      <a href="#">Contact</a>\n    </nav>\n  </header>\n\n'+
+    '  <div class="page">\n    <aside class="filters">\n      <h3>Filters</h3>\n      <ul>\n        <li>Floral</li>\n        <li>Woody</li>\n        <li>Fresh</li>\n        <li>Oriental</li>\n      </ul>\n    </aside>\n\n    <main class="products">\n'+
+    rep(function(i){return '      <div class="product">\n        <img src="perfume'+(i+1)+'.jpg" alt="'+PERF[i][0]+'">\n        <h4>'+PERF[i][0]+'</h4>\n        <p>'+PERF[i][1]+' AED</p>\n      </div>\n'},6)+
+    '    </main>\n  </div>\n\n  <footer>© HCT Perfume Store</footer>\n',VIEWPORT),
+  css: '/* Colours and fonts are done. Add the layout. */\nbody {\n  margin: 0;\n  font-family: Arial, sans-serif;\n  background-color: #fbf6ef;\n}\n\n.site {\n  background-color: #3b2d2a;\n  padding: 12px 20px;\n}\n\n.brand {\n  color: #f3e4d1;\n  font-size: 22px;\n  font-weight: bold;\n}\n\n.links a {\n  color: white;\n  text-decoration: none;\n  padding: 8px 12px;\n}\n\n.page {\n  padding: 20px;\n}\n\n.filters {\n  background-color: #f3e4d1;\n  padding: 15px;\n  min-width: 150px;\n}\n\n.products {\n\n}\n\n.product {\n  background-color: white;\n  border: 1px solid #e4d6c3;\n  text-align: center;\n  padding: 12px;\n}\n\nfooter {\n  text-align: center;\n  padding: 15px;\n  color: #6b5a48;\n}',
+  task: 'i-cap'
+};
+
+/* ===================== exercises =====================
+   Each check gets K = {w: document rendered 1024px wide, n: same page rendered 600px wide, html, css}.
+   Helpers (cs, sameRow, tracks …) are defined in the engine. */
+var EX = {
+'f-engage':{title:'Turn the navigation into a row',badge:'First try',
+  brief:'<p>In <code>style.css</code>, add <code>display: flex;</code> inside the <code>.nav</code> rule. Do not change the HTML.</p>',
+  checks:[
+    ['<code>.nav</code> is a flex container (<code>display: flex</code>)',function(K){return cs(K.w,'.nav','display')==='flex'}],
+    ['The five links now sit side by side in one row',function(K){return sameRow(K.w,'.nav > div')}],
+    ['The HTML still has five <code>&lt;div&gt;</code> links — only the CSS changed',function(K){return all(K.w,'.nav > div').length===5}]
+  ],
+  hints:['Find the line that says “add display: flex; on the next line”.','Type display: flex; on the empty line inside .nav { … } — with the semicolon.'],
+  solution:{css:'.nav {\n  background-color: #152530;\n  padding: 10px;\n  display: flex;\n}\n\n.nav div {\n  color: white;\n  font-family: Arial, sans-serif;\n  padding: 10px 16px;\n}'}},
+
+'f-container':{title:'Make a row of cards',
+  brief:'<ol><li>Make <code>.cards</code> a flex container.</li><li>Give every <code>.card</code> a <code>background-color</code> of your choice.</li></ol>',
+  checks:[
+    ['<code>.cards</code> has <code>display: flex</code>',function(K){return cs(K.w,'.cards','display')==='flex'}],
+    ['The three cards sit side by side',function(K){return sameRow(K.w,'.card')&&all(K.w,'.card').length===3}],
+    ['<code>display: flex</code> is on the parent, not on <code>.card</code>',function(K){return cs(K.w,'.card','display')!=='flex'}],
+    ['Each <code>.card</code> has a background colour',function(K){var b=cs(K.w,'.card','background-color');return b&&b!=='rgba(0, 0, 0, 0)'&&b!=='transparent'}]
+  ],
+  hints:['The parent is the element whose children you want to arrange: .cards.','Add background-color: lightsteelblue; (or any colour) inside .card { … }.'],
+  solution:{css:'body {\n  font-family: Arial, sans-serif;\n}\n\n.cards {\n  display: flex;\n}\n\n.card {\n  border: 2px solid #0d6b6b;\n  background-color: lightsteelblue;\n  padding: 15px;\n  margin: 10px;\n}'}},
+
+'f-direction':{title:'A toolbar and a side menu',
+  brief:'<p>Both containers are already flex containers.</p><ol><li>Make the <code>.menu</code> links stack from top to bottom.</li><li>Write <code>flex-direction: row;</code> on <code>.toolbar</code> so the direction is stated explicitly.</li></ol>',
+  checks:[
+    ['<code>.menu</code> uses <code>flex-direction: column</code>',function(K){return cs(K.w,'.menu','flex-direction')==='column'}],
+    ['The four menu links are stacked vertically',function(K){return stacked(K.w,'.menu a')}],
+    ['<code>.toolbar</code> states <code>flex-direction: row</code>',function(K){return ruleHas(K.css,'.toolbar','flex-direction','row')}],
+    ['The toolbar buttons are still in one row',function(K){return sameRow(K.w,'.toolbar span')}]
+  ],
+  hints:['flex-direction goes on the container (.menu), not on the links.','.menu { display: flex; flex-direction: column; }'],
+  solution:{css:'body {\n  font-family: Arial, sans-serif;\n}\n\n.toolbar {\n  display: flex;\n  flex-direction: row;\n}\n\n.menu {\n  display: flex;\n  flex-direction: column;\n}\n\n.toolbar span, .menu a {\n  background-color: #e9eef1;\n  border: 1px solid #ccd5db;\n  padding: 8px 14px;\n  margin: 3px;\n  color: #152530;\n  text-decoration: none;\n}'}},
+
+'f-wrap':{title:'Let the tags wrap',
+  brief:'<p>The ten tags are squeezed into one line and spill out of the dashed box. Make them wrap onto new lines, inside the box.</p>',
+  checks:[
+    ['<code>.tags</code> has <code>flex-wrap: wrap</code>',function(K){return cs(K.w,'.tags','flex-wrap')==='wrap'}],
+    ['The tags now use more than one line',function(K){return rowsOf(K.w,'.tag')>1}],
+    ['No tag sticks out of the right edge of the box',function(K){var b=q(K.w,'.tags');if(!b)return false;var r=b.getBoundingClientRect();return all(K.w,'.tag').every(function(t){return t.getBoundingClientRect().right<=r.right+1})}]
+  ],
+  hints:['The property goes on the container: .tags.','flex-wrap: wrap;'],
+  solution:{css:'body {\n  font-family: Arial, sans-serif;\n}\n\n.tags {\n  display: flex;\n  flex-wrap: wrap;\n  width: 320px;\n  border: 2px dashed #0d6b6b;\n  padding: 6px;\n}\n\n.tag {\n  background-color: #0d6b6b;\n  color: white;\n  padding: 6px 12px;\n  margin: 4px;\n  border-radius: 20px;\n  white-space: nowrap;\n}'}},
+
+'f-justify':{title:'Align the header and the footer',
+  brief:'<ol><li>In <code>.top</code>, push the logo to the left and the links to the right.</li><li>Centre them vertically inside the 90px bar.</li><li>Centre the three links in <code>.bottom</code>.</li></ol>',
+  checks:[
+    ['<code>.top</code> uses <code>justify-content: space-between</code>',function(K){return cs(K.w,'.top','justify-content')==='space-between'}],
+    ['<code>.top</code> uses <code>align-items: center</code>',function(K){return cs(K.w,'.top','align-items')==='center'}],
+    ['<code>.bottom</code> uses <code>justify-content: center</code>',function(K){return cs(K.w,'.bottom','justify-content')==='center'}]
+  ],
+  hints:['space-between puts the first item at the start, the last at the end, and shares the rest between them.','Vertical centring in a row is the cross axis: align-items.'],
+  solution:{css:'body {\n  font-family: Arial, sans-serif;\n}\n\n.top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  height: 90px;\n  background-color: #152530;\n  color: white;\n  padding: 0 20px;\n}\n\n.logo {\n  font-size: 28px;\n  font-weight: bold;\n}\n\n.bottom {\n  display: flex;\n  justify-content: center;\n  background-color: #e9eef1;\n}\n\n.bottom p {\n  margin: 10px 16px;\n}'}},
+
+'f-rwd':{title:'A responsive banner',
+  brief:'<ol><li>In <code>index.html</code>, add the viewport <code>&lt;meta&gt;</code> tag inside the <code>&lt;head&gt;</code>.</li><li>In <code>style.css</code>, make the image scale down with the frame (but never grow beyond its real size) and keep its shape.</li></ol>',
+  checks:[
+    ['The page has a viewport meta tag with <code>width=device-width</code>',function(K){return hasViewport(K.html)}],
+    ['<code>img</code> has <code>max-width: 100%</code>',function(K){return cs(K.w,'img','max-width')==='100%'}],
+    ['<code>img</code> has <code>height: auto</code>',function(K){return ruleHas(K.css,'img','height','auto')}],
+    ['The banner fits inside the frame',function(K){var f=q(K.w,'.frame'),i=q(K.w,'img');return f&&i&&i.getBoundingClientRect().right<=f.getBoundingClientRect().right+1}]
+  ],
+  hints:['The meta tag is in the slides: name="viewport" content="width=device-width, initial-scale=1.0".','img { max-width: 100%; height: auto; }'],
+  solution:{html:page('Responsive image','  <div class="frame">\n    <h2>New arrivals</h2>\n    <img src="banner.jpg" alt="Store banner">\n    <p>The banner is 800 pixels wide. The frame is narrower.</p>\n  </div>\n',VIEWPORT),
+    css:'body {\n  font-family: Arial, sans-serif;\n}\n\n.frame {\n  width: 60%;\n  border: 2px dashed #0d6b6b;\n  padding: 10px;\n}\n\nimg {\n  max-width: 100%;\n  height: auto;\n}'}},
+
+'f-media':{title:'Stack the links on small screens',
+  brief:'<p>Add a media query so that when the screen is <b>700px or less</b>, <code>.link-flex-container</code> stacks its links in a column. Press <b>Phone</b> above the Output to test it.</p>',
+  checks:[
+    ['There is a media query for <code>max-width: 700px</code>',function(K){return hasMedia(K.w,700)}],
+    ['At 700px or less, the links are stacked in a column',function(K){return cs(K.n,'.link-flex-container','flex-direction')==='column'&&stacked(K.n,'.link-flex-container a')}],
+    ['On a wide screen, the links are still in a row',function(K){return sameRow(K.w,'.link-flex-container a')}],
+    ['The links keep their DodgerBlue background',function(K){return cs(K.w,'a','background-color')==='rgb(30, 144, 255)'}]
+  ],
+  hints:['The general syntax: @media screen and (max-width:700px) { … }.','Inside the braces, repeat the selector: .link-flex-container { flex-direction: column; }'],
+  solution:{css:'.link-flex-container {\n  display: flex;\n}\n\n@media screen and (max-width:700px) {\n  .link-flex-container {\n    flex-direction: column;\n  }\n}\n\n'+SLIDEA}},
+
+'f-cap':{title:'The HCT Perfume Store header',badge:'Section challenge',cap:1,
+  brief:'<p>Work down the list. Every requirement ticks itself as you type.</p>',
+  checks:[
+    ['<code>index.html</code> has the viewport meta tag',function(K){return hasViewport(K.html)}],
+    ['<code>.site</code> is a flex container',function(K){return cs(K.w,'.site','display')==='flex'}],
+    ['<code>.site</code> pushes the brand left and the links right (<code>space-between</code>)',function(K){return cs(K.w,'.site','justify-content')==='space-between'}],
+    ['<code>.site</code> centres its items on the cross axis',function(K){return cs(K.w,'.site','align-items')==='center'}],
+    ['<code>.links</code> is a flex container',function(K){return cs(K.w,'.links','display')==='flex'}],
+    ['On a wide screen, the five links are in one row',function(K){return sameRow(K.w,'.links a')}],
+    ['The links have no underline',function(K){return /none/.test(cs(K.w,'.links a','text-decoration-line')||cs(K.w,'.links a','text-decoration'))}],
+    ['There is a media query for <code>max-width: 700px</code>',function(K){return hasMedia(K.w,700)}],
+    ['At 700px or less, <code>.site</code> stacks the brand above the links',function(K){return cs(K.n,'.site','flex-direction')==='column'}],
+    ['At 700px or less, the links stack in a column',function(K){return stacked(K.n,'.links a')}]
+  ],
+  hints:['Start with .site { display: flex; justify-content: space-between; align-items: center; }','.links { display: flex; } and .links a { text-decoration: none; }','In the media query, give both .site and .links flex-direction: column;'],
+  solution:{html:page('HCT Perfume Store','  <header class="site">\n    <div class="brand">HCT Perfume Store</div>\n    <nav class="links">\n'+
+    rep(function(i){return '      <a href="#">'+NAVLINKS[i]+'</a>\n'},5)+'    </nav>\n  </header>\n\n  <h1>Welcome</h1>\n  <p>Fragrances from around the world.</p>\n',VIEWPORT),
+    css:'body {\n  margin: 0;\n  font-family: Arial, sans-serif;\n}\n\n.site {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  background-color: #3b2d2a;\n  padding: 12px 20px;\n}\n\n.brand {\n  color: #f3e4d1;\n  font-size: 22px;\n  font-weight: bold;\n}\n\n.links {\n  display: flex;\n}\n\n.links a {\n  color: white;\n  text-decoration: none;\n  padding: 8px 12px;\n}\n\nh1, p {\n  padding: 0 20px;\n}\n\n@media screen and (max-width:700px) {\n  .site {\n    flex-direction: column;\n  }\n  .links {\n    flex-direction: column;\n  }\n}'}},
+
+'g-engage':{title:'Three products per row',badge:'First try',
+  brief:'<p>Add <code>display: grid;</code> and <code>grid-template-columns: 1fr 1fr 1fr;</code> to <code>.grid-container</code>.</p>',
+  checks:[
+    ['<code>.grid-container</code> is a grid container',function(K){return cs(K.w,'.grid-container','display')==='grid'}],
+    ['The grid has three columns',function(K){return tracks(K.w,'.grid-container')===3}],
+    ['The first three products share a row',function(K){return sameRow(K.w,'.grid-item',3)}]
+  ],
+  hints:['Both lines go inside .grid-container { … }.','Three columns = three values: 1fr 1fr 1fr.'],
+  solution:{css:'body {\n  font-family: Arial, sans-serif;\n}\n\n.grid-container {\n  display: grid;\n  grid-template-columns: 1fr 1fr 1fr;\n}\n\n.grid-item {\n  background-color: rgb(243, 228, 209);\n  text-align: center;\n  padding: 12px;\n  margin: 4px;\n}\n\nimg {\n  max-width: 100%;\n}'}},
+
+'g-columns':{title:'Four equal columns',
+  brief:'<p>The container is already a grid. Give it <b>four equal columns</b> so the eight items form two rows.</p>',
+  checks:[
+    ['The grid has four columns',function(K){return tracks(K.w,'.grid-container')===4}],
+    ['All four columns are the same width',function(K){var t=trackPx(K.w,'.grid-container');return t.length===4&&Math.max.apply(null,t)-Math.min.apply(null,t)<1}],
+    ['The eight items fill exactly two rows',function(K){return rowsOf(K.w,'.grid-item')===2}]
+  ],
+  hints:['grid-template-columns takes one value per column.','grid-template-columns: 1fr 1fr 1fr 1fr;'],
+  solution:{css:'body {\n  font-family: Arial, sans-serif;\n}\n\n.grid-container {\n  display: grid;\n  grid-template-columns: 1fr 1fr 1fr 1fr;\n  gap: 10px;\n  background-color: #dde7f5;\n  padding: 10px;\n}\n\n.grid-item {\n  background-color: #2c5b98;\n  color: white;\n  font-size: 22px;\n  text-align: center;\n  padding: 20px;\n}'}},
+
+'g-fr':{title:'Menu and content: 1fr 4fr',
+  brief:'<p>Give <code>.layout</code> two columns so that the content column is <b>four times</b> as wide as the menu.</p>',
+  checks:[
+    ['<code>.layout</code> has two columns',function(K){return tracks(K.w,'.layout')===2}],
+    ['The menu and the content are side by side',function(K){var a=q(K.w,'.side'),b=q(K.w,'.content');return a&&b&&Math.abs(a.getBoundingClientRect().top-b.getBoundingClientRect().top)<2}],
+    ['The content column is four times the menu column',function(K){var t=trackPx(K.w,'.layout');return t.length===2&&Math.abs(t[1]/t[0]-4)<0.05}]
+  ],
+  hints:['Total 5 parts: 1 for the menu, 4 for the content.','grid-template-columns: 1fr 4fr;'],
+  solution:{css:'body {\n  font-family: Arial, sans-serif;\n}\n\n.layout {\n  display: grid;\n  grid-template-columns: 1fr 4fr;\n  gap: 10px;\n}\n\n.side {\n  background-color: lightsteelblue;\n  padding: 15px;\n}\n\n.content {\n  background-color: #f3e4d1;\n  padding: 15px;\n}'}},
+
+'g-gap':{title:'Gap inside, padding outside',
+  brief:'<ol><li>Put <b>30px</b> of space between all rows and columns.</li><li>Put <b>20px</b> of padding around the outside of the grid.</li></ol>',
+  checks:[
+    ['30px between the columns',function(K){return cs(K.w,'.grid-container','column-gap')==='30px'}],
+    ['30px between the rows',function(K){return cs(K.w,'.grid-container','row-gap')==='30px'}],
+    ['20px of padding around the grid',function(K){return cs(K.w,'.grid-container','padding-top')==='20px'&&cs(K.w,'.grid-container','padding-left')==='20px'}]
+  ],
+  hints:['One property sets both gaps: gap: 30px;','padding: 20px; on the same container.'],
+  solution:{css:'body {\n  font-family: Arial, sans-serif;\n}\n\n.grid-container {\n  display: grid;\n  grid-template-columns: 1fr 1fr 1fr;\n  gap: 30px;\n  padding: 20px;\n  background-color: #dde7f5;\n}\n\n.grid-item {\n  background-color: #2c5b98;\n  color: white;\n  font-size: 22px;\n  text-align: center;\n  padding: 20px;\n}'}},
+
+'g-perfume':{title:'Rebuild the slides’ perfume grid',
+  brief:'<p>Fill in the two empty rules so the page matches the Chapter 6 example: three columns, 20px gaps, and soft beige centred cells with 20px padding.</p>',
+  checks:[
+    ['<code>.grid-container</code> is a grid',function(K){return cs(K.w,'.grid-container','display')==='grid'}],
+    ['Three equal columns',function(K){var t=trackPx(K.w,'.grid-container');return t.length===3&&Math.max.apply(null,t)-Math.min.apply(null,t)<1}],
+    ['20px gap between cells',function(K){return cs(K.w,'.grid-container','column-gap')==='20px'&&cs(K.w,'.grid-container','row-gap')==='20px'}],
+    ['<code>.grid-item</code> background is <code>rgb(243, 228, 209)</code>',function(K){return cs(K.w,'.grid-item','background-color')==='rgb(243, 228, 209)'}],
+    ['<code>.grid-item</code> text is centred',function(K){return cs(K.w,'.grid-item','text-align')==='center'}],
+    ['<code>.grid-item</code> has 20px padding',function(K){return cs(K.w,'.grid-item','padding-top')==='20px'&&cs(K.w,'.grid-item','padding-left')==='20px'}]
+  ],
+  hints:['Look back at the worked example above — the properties are identical.','Container: display, grid-template-columns, gap. Item: background-color, text-align, padding.'],
+  solution:{css:'body {\n  font-family: Arial, sans-serif;\n}\n\nimg {\n  max-width: 100%;\n}\n\n.grid-container {\n  display: grid;\n  grid-template-columns: 1fr 1fr 1fr;\n  gap: 20px;\n}\n\n.grid-item {\n  background-color: rgb(243, 228, 209);\n  text-align: center;\n  padding: 20px;\n}'}},
+
+'g-resp':{title:'Two columns on a phone',
+  brief:'<ol><li>The pictures are big and overflow their cells — make them responsive.</li><li>Add a media query: at <b>700px or less</b>, the grid has <b>two</b> columns.</li></ol><p>Use <b>Tablet</b> and <b>Phone</b> above the Output to test.</p>',
+  checks:[
+    ['<code>img</code> has <code>max-width: 100%</code>',function(K){return cs(K.w,'img','max-width')==='100%'}],
+    ['There is a media query for <code>max-width: 700px</code>',function(K){return hasMedia(K.w,700)}],
+    ['At 700px or less, the grid has two columns',function(K){return tracks(K.n,'.grid-container')===2}],
+    ['On a wide screen, the grid still has three columns',function(K){return tracks(K.w,'.grid-container')===3}]
+  ],
+  hints:['img { max-width: 100%; }','@media screen and (max-width:700px) { .grid-container { grid-template-columns: 1fr 1fr; } }'],
+  solution:{css:PERF_CSS+'\n\nimg {\n  max-width: 100%;\n}\n\n@media screen and (max-width:700px) {\n  .grid-container {\n    grid-template-columns: 1fr 1fr;\n  }\n}'}},
+
+'i-compare':{title:'Pick the right tool twice',
+  brief:'<ol><li>The chips are a single line → make <code>.row</code> a <b>flex</b> container.</li><li>The tiles are rows and columns → make <code>.board</code> a <b>grid</b> with three columns and a <code>10px</code> gap.</li></ol>',
+  checks:[
+    ['<code>.row</code> is a flex container',function(K){return cs(K.w,'.row','display')==='flex'}],
+    ['The five chips sit in one row',function(K){return sameRow(K.w,'.chip')}],
+    ['<code>.board</code> is a grid container',function(K){return cs(K.w,'.board','display')==='grid'}],
+    ['<code>.board</code> has three columns',function(K){return tracks(K.w,'.board')===3}],
+    ['10px gap between the tiles',function(K){return cs(K.w,'.board','column-gap')==='10px'&&cs(K.w,'.board','row-gap')==='10px'}]
+  ],
+  hints:['.row { display: flex; }','.board { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }'],
+  solution:{css:'body {\n  font-family: Arial, sans-serif;\n}\n\n.row {\n  display: flex;\n}\n\n.board {\n  display: grid;\n  grid-template-columns: 1fr 1fr 1fr;\n  gap: 10px;\n}\n\n.chip {\n  background-color: #0d6b6b;\n  color: white;\n  padding: 6px 14px;\n  margin: 4px;\n  border-radius: 20px;\n}\n\n.tile {\n  background-color: #2c5b98;\n  color: white;\n  padding: 24px;\n  text-align: center;\n}'}},
+
+'i-nest':{title:'Build the Chapter 7 layout',
+  brief:'<p>Fill in the three empty rules so the page matches the worked example: a salmon flex container holding a blue sidebar and a white 3-column image grid.</p>',
+  checks:[
+    ['<code>.flex-con</code> is a flex container in a row',function(K){return cs(K.w,'.flex-con','display')==='flex'&&cs(K.w,'.flex-con','flex-direction')==='row'}],
+    ['<code>.flex-con</code> is lightsalmon with 20px padding',function(K){return cs(K.w,'.flex-con','background-color')==='rgb(255, 160, 122)'&&cs(K.w,'.flex-con','padding-top')==='20px'}],
+    ['<code>.side</code> is lightsteelblue with 20px padding',function(K){return cs(K.w,'.side','background-color')==='rgb(176, 196, 222)'&&cs(K.w,'.side','padding-top')==='20px'}],
+    ['The sidebar and the image area sit side by side',function(K){var a=q(K.w,'.side'),b=q(K.w,'.grid-con');return a&&b&&Math.abs(a.getBoundingClientRect().top-b.getBoundingClientRect().top)<2&&b.getBoundingClientRect().left>a.getBoundingClientRect().left}],
+    ['<code>.grid-con</code> is a grid with three columns',function(K){return cs(K.w,'.grid-con','display')==='grid'&&tracks(K.w,'.grid-con')===3}],
+    ['20px gap between the images',function(K){return cs(K.w,'.grid-con','column-gap')==='20px'}],
+    ['<code>.grid-con</code> has a white background and 20px padding',function(K){return cs(K.w,'.grid-con','background-color')==='rgb(255, 255, 255)'&&cs(K.w,'.grid-con','padding-top')==='20px'}]
+  ],
+  hints:['The worked example above has every property you need.','.grid-con is both: a flex item (no extra code needed) and a grid container (display: grid).'],
+  solution:{css:'body {\n  font-family: Arial, sans-serif;\n}\n\n'+NEST_CSS}},
+
+'i-resp':{title:'One media query, two layouts',
+  brief:'<p>Add a media query for <b>700px or less</b> that</p><ol><li>stacks the sidebar above the images (<code>.flex-con</code>), and</li><li>drops the image grid to <b>two</b> columns (<code>.grid-con</code>).</li></ol>',
+  checks:[
+    ['There is a media query for <code>max-width: 700px</code>',function(K){return hasMedia(K.w,700)}],
+    ['At 700px or less, <code>.flex-con</code> is a column',function(K){return cs(K.n,'.flex-con','flex-direction')==='column'}],
+    ['At 700px or less, the sidebar is above the images',function(K){var a=q(K.n,'.side'),b=q(K.n,'.grid-con');return a&&b&&b.getBoundingClientRect().top>=a.getBoundingClientRect().bottom-1}],
+    ['At 700px or less, <code>.grid-con</code> has two columns',function(K){return tracks(K.n,'.grid-con')===2}],
+    ['On a wide screen, the layout is unchanged (row, three columns)',function(K){return cs(K.w,'.flex-con','flex-direction')==='row'&&tracks(K.w,'.grid-con')===3}]
+  ],
+  hints:['Both rules can go inside the same @media block.','@media screen and (max-width:700px) { .flex-con { flex-direction: column; } .grid-con { grid-template-columns: 1fr 1fr; } }'],
+  solution:{css:'body {\n  font-family: Arial, sans-serif;\n}\n\n'+NEST_CSS+'\n\n@media screen and (max-width:700px) {\n  .flex-con {\n    flex-direction: column;\n  }\n  .grid-con {\n    grid-template-columns: 1fr 1fr;\n  }\n}'}},
+
+'i-cap':{title:'Store home page',badge:'Capstone',cap:1,
+  brief:'<p>Add the layout in <code>style.css</code>. Twelve requirements — partial progress shows as you type. Pop the bench out for more room.</p>',
+  checks:[
+    ['<code>.site</code> is a flex container',function(K){return cs(K.w,'.site','display')==='flex'}],
+    ['<code>.site</code> uses <code>space-between</code> and centres on the cross axis',function(K){return cs(K.w,'.site','justify-content')==='space-between'&&cs(K.w,'.site','align-items')==='center'}],
+    ['The four <code>.links</code> sit in one row',function(K){return cs(K.w,'.links','display')==='flex'&&sameRow(K.w,'.links a')}],
+    ['<code>.page</code> is a flex container',function(K){return cs(K.w,'.page','display')==='flex'}],
+    ['The filters sidebar is beside the products',function(K){var a=q(K.w,'.filters'),b=q(K.w,'.products');return a&&b&&Math.abs(a.getBoundingClientRect().top-b.getBoundingClientRect().top)<2&&b.getBoundingClientRect().left>a.getBoundingClientRect().left}],
+    ['<code>.products</code> is a grid container',function(K){return cs(K.w,'.products','display')==='grid'}],
+    ['The products grid has three columns on a wide screen',function(K){return tracks(K.w,'.products')===3}],
+    ['There is at least a 10px gap between products',function(K){return parseFloat(cs(K.w,'.products','column-gap'))>=10&&parseFloat(cs(K.w,'.products','row-gap'))>=10}],
+    ['Product images are responsive (<code>max-width: 100%</code>)',function(K){return cs(K.w,'.product img','max-width')==='100%'}],
+    ['There is a media query for <code>max-width: 700px</code>',function(K){return hasMedia(K.w,700)}],
+    ['At 700px or less, the header and the page both stack in a column',function(K){return cs(K.n,'.site','flex-direction')==='column'&&cs(K.n,'.page','flex-direction')==='column'}],
+    ['At 700px or less, the products grid has two columns',function(K){return tracks(K.n,'.products')===2}]
+  ],
+  hints:['Header: .site { display:flex; justify-content:space-between; align-items:center; } and .links { display:flex; }','Body: .page { display:flex; } and .products { display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px; } — add margin-left to .products if you want space beside the sidebar.','Phone: one @media screen and (max-width:700px) block with .site and .page flex-direction:column, and .products grid-template-columns:1fr 1fr.'],
+  solution:{css:'/* Colours and fonts are done. Add the layout. */\nbody {\n  margin: 0;\n  font-family: Arial, sans-serif;\n  background-color: #fbf6ef;\n}\n\n.site {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  background-color: #3b2d2a;\n  padding: 12px 20px;\n}\n\n.brand {\n  color: #f3e4d1;\n  font-size: 22px;\n  font-weight: bold;\n}\n\n.links {\n  display: flex;\n}\n\n.links a {\n  color: white;\n  text-decoration: none;\n  padding: 8px 12px;\n}\n\n.page {\n  display: flex;\n  padding: 20px;\n}\n\n.filters {\n  background-color: #f3e4d1;\n  padding: 15px;\n  min-width: 150px;\n}\n\n.products {\n  display: grid;\n  grid-template-columns: 1fr 1fr 1fr;\n  gap: 15px;\n  margin-left: 20px;\n}\n\n.product {\n  background-color: white;\n  border: 1px solid #e4d6c3;\n  text-align: center;\n  padding: 12px;\n}\n\n.product img {\n  max-width: 100%;\n}\n\nfooter {\n  text-align: center;\n  padding: 15px;\n  color: #6b5a48;\n}\n\n@media screen and (max-width:700px) {\n  .site {\n    flex-direction: column;\n  }\n  .page {\n    flex-direction: column;\n  }\n  .products {\n    grid-template-columns: 1fr 1fr;\n    margin-left: 0;\n    margin-top: 15px;\n  }\n}'}}
+};
+
+/* ===================== quizzes ===================== */
+var QZ = {
+fq1:{q:'A container has <code>flex-direction: column</code>. Which property now spaces the items out <b>vertically</b>?',
+  opts:[['<code>justify-content</code>',1],['<code>align-items</code>',0],['<code>text-align</code>',0],['<code>vertical-align</code>',0]],
+  why:'justify-content always works along the main axis. In a column, the main axis is vertical — so justify-content now works up and down.'},
+fq2:{q:'Which elements become flex items when you write <code>.nav{display:flex}</code>?',
+  opts:[['Every element on the page',0],['Only the direct children of <code>.nav</code>',1],['All children and grandchildren of <code>.nav</code>',0],['<code>.nav</code> itself',0]],
+  why:'Only direct children become flex items. A grandchild belongs to its own parent, which is laid out normally unless it is also a flex container.'},
+fq3:{q:'What is the default value of <code>flex-wrap</code>?',
+  opts:[['<code>wrap</code>',0],['<code>nowrap</code>',1],['<code>column</code>',0],['<code>auto</code>',0]],
+  why:'nowrap is the default: flex items stay on one line, even if they have to shrink or overflow.'},
+
+fe1:{q:'Which rule turns <code>.menu</code> into a flex container?',
+  opts:[['<code>.menu { flex: container; }</code>',0],['<code>.menu { display: flex; }</code>',1],['<code>.menu { float: left; }</code>',0],['<code>.menu { position: flex; }</code>',0]],
+  why:'The display property makes the element flexible: display:flex (or display:inline-flex).'},
+fe2:{q:'If you never write <code>flex-direction</code>, how are the flex items stacked?',
+  opts:[['Top to bottom',0],['Left to right, in a row',1],['Right to left',0],['They overlap',0]],
+  why:'row is the default direction — flex items stack horizontally from left to right.'},
+fe3:{q:'Ten tags overflow the right edge of their flex container. Which line fixes it?',
+  opts:[['<code>flex-direction: row;</code>',0],['<code>justify-content: center;</code>',0],['<code>flex-wrap: wrap;</code>',1],['<code>display: block;</code>',0]],
+  why:'flex-wrap:wrap lets items that do not fit move onto the next line.'},
+fe4:{q:'When do the rules inside <code>@media screen and (max-width:700px) { … }</code> apply?',
+  opts:[['Only on screens wider than 700px',0],['On screens 700px wide or less',1],['Only when printing',0],['Always — the condition is ignored by browsers',0]],
+  why:'max-width:700px is true when the width is 700px or less, so the rules apply on small screens such as phones.'},
+fe5:{q:'An image should shrink on a phone but never grow larger than its original size. Which CSS?',
+  opts:[['<code>width: 100%;</code>',0],['<code>max-width: 100%; height: auto;</code>',1],['<code>width: 700px;</code>',0],['<code>min-width: 100%;</code>',0]],
+  why:'max-width:100% scales the image down when needed but never above its real size. width:100% would also stretch it up.'},
+
+gq1:{q:'A grid is 500px wide with <code>grid-template-columns: 1fr 4fr;</code> and no gap. How wide is each column?',
+  opts:[['250px and 250px',0],['100px and 400px',1],['1px and 4px',0],['50px and 450px',0]],
+  why:'1fr + 4fr = 5 parts. 500 ÷ 5 = 100px per part, so the columns are 100px and 400px.'},
+gq2:{q:'<code>grid-template-columns: 1fr 1fr 1fr;</code> with 7 items gives…',
+  opts:[['7 columns in one row',0],['3 columns and 3 rows — the last row holds one item',1],['3 rows and 7 columns',0],['An error, because 7 is not divisible by 3',0]],
+  why:'The columns are fixed at three; rows are created automatically, as many as needed: 3 + 3 + 1.'},
+gq3:{q:'Where does <code>gap: 30px;</code> add space?',
+  opts:[['Around the outside of the grid',0],['Between the rows and the columns only',1],['Inside every cell',0],['Only between the columns',0]],
+  why:'gap is the space between rows and columns. Space around the outside edge comes from padding.'},
+
+ge1:{q:'Which line makes an element a grid container?',
+  opts:[['<code>display: grid;</code>',1],['<code>grid: on;</code>',0],['<code>display: table;</code>',0],['<code>grid-template-columns: grid;</code>',0]],
+  why:'An HTML element becomes a grid container when its display property is set to grid.'},
+ge2:{q:'What does <code>fr</code> stand for?',
+  opts:[['Frame',0],['Fractional unit',1],['Free row',0],['Fixed ratio',0]],
+  why:'fr is the fractional unit — a share of the available space in the grid.'},
+ge3:{q:'Which declaration gives <b>four equal</b> columns?',
+  opts:[['<code>grid-columns: 4;</code>',0],['<code>grid-template-rows: 1fr 1fr 1fr 1fr;</code>',0],['<code>grid-template-columns: 1fr 1fr 1fr 1fr;</code>',1],['<code>grid-template-columns: 4fr;</code>',0]],
+  why:'One value per column, all equal. 4fr alone would be a single column taking all the space.'},
+ge4:{q:'You want 2 columns on screens 700px or less. What goes <b>inside</b> the media query?',
+  opts:[['<code>.grid-container { display: grid; }</code>',0],['<code>.grid-container { grid-template-columns: 1fr 1fr; }</code>',1],['<code>.grid-container { gap: 2; }</code>',0],['<code>img { max-width: 2; }</code>',0]],
+  why:'Only the property that changes goes in the query: the column list. display and gap are inherited from the main rule.'},
+ge5:{q:'Grid is called “two-dimensional” because…',
+  opts:[['It only works on 2 columns',0],['It controls rows and columns together',1],['It needs two containers',0],['It works on width and colour',0]],
+  why:'Grid places items in both directions at once, so columns line up from row to row.'},
+
+iq1:{q:'In the Chapter 7 example, what is <code>.grid-con</code>?',
+  opts:[['Only a grid container',0],['Only a flex item',0],['Both a flex item of <code>.flex-con</code> and a grid container for the images',1],['Neither — it is just a div',0]],
+  why:'It is a direct child of the flex container (so a flex item), and it has display:grid (so a grid container) — two roles at once.'},
+iq2:{q:'The six images inside <code>.grid-con</code> are…',
+  opts:[['Flex items of <code>.flex-con</code>',0],['Grid items of <code>.grid-con</code>',1],['Both flex items and grid items',0],['Not affected by any layout',0]],
+  why:'Layout properties only reach direct children. The images are children of .grid-con, so they are grid items.'},
+iq3:{q:'A navigation bar with five links in one row. Best tool?',
+  opts:[['Grid, because it has columns',0],['Flexbox — it is a one-dimensional row',1],['A table',0],['Floats',0]],
+  why:'A single row of items is one-dimensional: Flexbox distributes the space along that one direction.'},
+
+ie1:{q:'A gallery of 12 photos, 4 across and 3 down, with columns lining up. Best tool?',
+  opts:[['Flexbox',0],['Grid',1],['Media queries',0],['Inline styles',0]],
+  why:'Rows and columns that line up = a two-dimensional layout = Grid.'},
+ie2:{q:'Complete: “Use Flexbox for ___ layouts and Grid for ___ structures.”',
+  opts:[['two-dimensional / one-dimensional',0],['one-dimensional / two-dimensional',1],['mobile / desktop',0],['text / image',0]],
+  why:'Flexbox: one direction at a time. Grid: rows and columns together.'},
+ie3:{q:'How many columns does the grid inside <code>main</code> have?',
+  code:'.page { display: flex; }\n.page main {\n  display: grid;\n  grid-template-columns: 2fr 1fr;\n}',
+  opts:[['1',0],['2',1],['3',0],['It depends on .page',0]],
+  why:'Two values in grid-template-columns = two columns, whatever the parent does. Being a flex item does not change that.'},
+ie4:{q:'At 700px or less you want the sidebar above the content. Inside the media query, <code>.flex-con</code> needs…',
+  opts:[['<code>display: grid;</code>',0],['<code>flex-direction: column;</code>',1],['<code>flex-wrap: nowrap;</code>',0],['<code>justify-content: center;</code>',0]],
+  why:'Switching the main axis to column stacks the flex items top to bottom.'},
+ie5:{q:'Which statement is true?',
+  opts:[['Flexbox and Grid cannot be used on the same page',0],['An element can be a flex item and a grid container at the same time',1],['Grid removes the need for media queries',0],['display:flex and display:grid must be on the same element',0]],
+  why:'They complement each other. Nesting is exactly how real pages combine them.'},
+
+/* draw-the-output questions: choose a sketch */
+dr1:{q:'Which sketch matches this code?', sketch:1,
+  code:'.box { display: flex; flex-direction: column; }\n\n<div class="box">\n  <div>A</div> <div>B</div> <div>C</div>\n</div>',
+  opts:[['row3','A, B, C in one row',0],['col3','A, B, C stacked',1],['grid2','A, B on top; C below',0]],
+  run:{html:page('Draw 1','  <div class="box">\n    <div>A</div>\n    <div>B</div>\n    <div>C</div>\n  </div>\n'),css:'.box {\n  display: flex;\n  flex-direction: column;\n}\n\n.box div {\n  background-color: #0d6b6b;\n  color: white;\n  padding: 12px;\n  margin: 4px;\n}'},
+  why:'flex-direction:column turns the main axis vertical, so the three items stack from top to bottom.'},
+dr2:{q:'Which sketch matches this code?', sketch:1,
+  code:'.g { display: grid;\n     grid-template-columns: 1fr 1fr;\n     gap: 10px; }\n\n<div class="g"> 1 2 3 4 5 </div>  <!-- five items -->',
+  opts:[['row5','Five in one row',0],['g3x2','Three columns, two rows',0],['g2x3','Two columns, three rows (5 alone)',1]],
+  run:{html:page('Draw 2','  <div class="g">\n'+rep(function(i){return '    <div>'+(i+1)+'</div>\n'},5)+'  </div>\n'),css:'.g {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 10px;\n}\n\n.g div {\n  background-color: #2c5b98;\n  color: white;\n  padding: 12px;\n}'},
+  why:'Two column values → two columns. Five items fill 2 + 2 + 1, so item 5 sits alone in row three.'},
+dr3:{q:'Which sketch matches this code?', sketch:1,
+  code:'.wrap { display: flex; }\n.gal  { display: grid;\n        grid-template-columns: 1fr 1fr 1fr; }\n\n<div class="wrap">\n  <div class="side">Side</div>\n  <div class="gal"> 6 images </div>\n</div>',
+  opts:[['stack','Sidebar on top, grid underneath',0],['nest','Sidebar left, 3 × 2 grid right',1],['row7','Seven boxes in one row',0]],
+  run:{html:page('Draw 3','  <div class="wrap">\n    <div class="side">Side</div>\n    <div class="gal">\n'+rep(function(i){return '      <img src="img'+(i+1)+'.jpg" alt="">\n'},6)+'    </div>\n  </div>\n'),css:'.wrap {\n  display: flex;\n}\n\n.gal {\n  display: grid;\n  grid-template-columns: 1fr 1fr 1fr;\n}\n\n.side {\n  background-color: lightsteelblue;\n  padding: 12px;\n}\n\nimg {\n  max-width: 100%;\n}'},
+  why:'.wrap places its two children in a row (sidebar, then .gal). Inside .gal, the six images form a 3-column grid of two rows.'}
+};
+
+/* ===================== self-assessment and exit tickets ===================== */
+var SA = {
+  flex:['I can create a flex container and name its flex items','I can change the direction and wrapping of flex items','I can align items with justify-content and align-items','I can write a media query that changes a flex layout'],
+  grid:['I can create a grid with display:grid and grid-template-columns','I can explain and use the fr unit','I can control spacing with gap','I can make a grid responsive with a media query'],
+  int:['I can choose Flexbox or Grid for a layout and explain why','I can nest a grid inside a flex container','I can predict the output of layout code before running it','I can build a responsive page that uses both']
+};
+var TK = {
+  flex:['flexbox properties you used today','differences between flex-direction: row and column','answer to the Essential Question: how do we place items in a row or column and share the space?'],
+  grid:['grid properties you used today','ways Grid is different from Flexbox (or from an HTML table)','answer to the Essential Question: how do we arrange content in rows and columns, and change it for a phone?'],
+  int:['places on a real website where you would use Flexbox or Grid','things you learned about nesting layouts','question you still have about Flexbox or Grid']
+};
+
+</script>
+<script>
+/* ===================== small helpers ===================== */
+function $(s,r){return (r||document).querySelector(s)}
+function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))}
+function el(tag,cls,html){var e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+var LS=(function(){try{var k='__t';window.localStorage.setItem(k,'1');window.localStorage.removeItem(k);return window.localStorage}catch(e){return null}})();
+var STORE_KEY='cis1203-flexgrid-lab-v1';
+
+/* ===================== check helpers (used by EX checks) ===================== */
+function q(d,sel){try{return d?d.querySelector(sel):null}catch(e){return null}}
+function all(d,sel){try{return d?Array.prototype.slice.call(d.querySelectorAll(sel)):[]}catch(e){return []}}
+function cs(d,sel,prop){var e=q(d,sel);if(!e)return '';var w=d.defaultView||window;return (w.getComputedStyle(e).getPropertyValue(prop)||'').trim()}
+function tops(list){return list.map(function(e){return e.getBoundingClientRect().top})}
+function sameRow(d,sel,n){var l=all(d,sel);if(n)l=l.slice(0,n);if(l.length<2)return false;var t=tops(l);return t.every(function(x){return Math.abs(x-t[0])<2})}
+function stacked(d,sel){var l=all(d,sel);if(l.length<2)return false;for(var i=1;i<l.length;i++){if(l[i].getBoundingClientRect().top<l[i-1].getBoundingClientRect().bottom-1)return false}return true}
+function rowsOf(d,sel){var t=tops(all(d,sel)),u=[];t.forEach(function(x){if(!u.some(function(y){return Math.abs(x-y)<2}))u.push(x)});return u.length}
+function trackPx(d,sel){if(cs(d,sel,'display').indexOf('grid')<0)return [];var v=cs(d,sel,'grid-template-columns');if(!v||v==='none')return [];return v.split(/\s+(?![^(]*\))/).map(parseFloat).filter(function(x){return !isNaN(x)})}
+function tracks(d,sel){return trackPx(d,sel).length}
+function stripComments(css){return String(css).replace(/\/\*[\s\S]*?\*\//g,'')}
+function ruleHas(css,sel,prop,val){
+  var re=/([^{}]+)\{([^{}]*)\}/g,m,s=stripComments(css);
+  while((m=re.exec(s))){
+    var sels=m[1].split(',').map(function(x){return x.trim().replace(/\s+/g,' ')});
+    if(sels.indexOf(sel)<0)continue;
+    var decl=new RegExp('(^|;|\\s)'+prop.replace(/-/g,'\\-')+'\\s*:\\s*'+val+'\\s*(;|$|!)','i');
+    if(decl.test(m[2].trim()))return true;
+  }
+  return false;
+}
+function hasViewport(html){var m=/<meta[^>]*name\s*=\s*["']viewport["'][^>]*>/i.exec(stripComments(String(html).replace(/<!--[\s\S]*?-->/g,'')));return !!m&&/width\s*=\s*device-width/i.test(m[0])&&/<head[\s\S]*<meta[^>]*viewport[\s\S]*<\/head>/i.test(html)}
+function hasMedia(d,px){
+  var re=new RegExp('max-width\\s*:\\s*'+px+'px','i');
+  try{
+    return Array.prototype.some.call(d.styleSheets,function(sh){
+      return Array.prototype.some.call(sh.cssRules||[],function(r){return r.type===4&&re.test(r.media.mediaText)&&r.cssRules.length>0});
+    });
+  }catch(e){return false}
+}
+
+/* ===================== syntax highlighting ===================== */
+function hlHTML(src){
+  var s=esc(src);
+  s=s.replace(/&lt;!--[\s\S]*?--&gt;/g,function(m){return '<span class="c-com">'+m+'</span>'});
+  s=s.replace(/&lt;!DOCTYPE[^&]*&gt;/gi,function(m){return '<span class="c-com">'+m+'</span>'});
+  s=s.replace(/&lt;(\/?)([a-zA-Z][\w-]*)([^&]*?)(\/?)&gt;/g,function(m,sl,name,attrs,sc){
+    var a=attrs.replace(/([a-zA-Z-]+)(\s*=\s*)("[^"]*"|'[^']*')?/g,function(mm,k,eq,v){
+      return '<span class="c-attr">'+k+'</span>'+(eq||'')+(v?'<span class="c-val">'+v+'</span>':'');
+    });
+    return '<span class="c-pun">&lt;'+sl+'</span><span class="c-tag">'+name+'</span>'+a+'<span class="c-pun">'+sc+'&gt;</span>';
+  });
+  return s;
+}
+function hlCSS(src){
+  var toks=String(src).match(/\/\*[\s\S]*?\*\/|[{};]|[^{};\/]+|\//g)||[],out='';
+  for(var i=0;i<toks.length;i++){
+    var t=toks[i],nx=toks[i+1];
+    if(/^\/\*/.test(t))out+='<span class="c-com">'+esc(t)+'</span>';
+    else if(t==='{'||t==='}'||t===';')out+='<span class="c-pun">'+t+'</span>';
+    else if(nx==='{'){out+=/^\s*@/.test(t)?'<span class="c-at">'+esc(t)+'</span>':'<span class="c-sel">'+esc(t)+'</span>'}
+    else if(t.indexOf(':')>0&&/\S/.test(t)){
+      var k=t.indexOf(':'),m=/^(\s*)([\s\S]*)$/.exec(t.slice(0,k));
+      out+=esc(m[1])+'<span class="c-prop">'+esc(m[2])+'</span><span class="c-pun">:</span><span class="c-val">'+esc(t.slice(k+1))+'</span>';
+    }
+    else out+=esc(t);
+  }
+  return out;
+}
+function hlAuto(src,label){return (/css/i.test(label||'')&&!/html/i.test(label||''))?hlCSS(src):hlHTML(src)}
+function codeBlock(src,label){
+  var w=el('div','codeblock');
+  w.innerHTML='<div class="code-bar"><span class="dot"></span>'+esc(label||'index.html')+
+    '<span class="cb-tools"><button class="cb-btn" type="button">copy</button></span></div><pre><code>'+hlAuto(src,label)+'</code></pre>';
+  w.querySelector('.cb-btn').addEventListener('click',function(ev){
+    var b=ev.currentTarget;
+    try{navigator.clipboard.writeText(src).then(function(){b.textContent='copied';setTimeout(function(){b.textContent='copy'},1400)},function(){selectCode(w)})}catch(e){selectCode(w)}
+  });
+  return w;
+}
+function selectCode(w){try{var r=document.createRange();r.selectNodeContents(w.querySelector('code'));var s=window.getSelection();s.removeAllRanges();s.addRange(r)}catch(e){}}
+
+/* ===================== rendering student code ===================== */
+var PRE='<style>html{color-scheme:light}body{background:#fff;color:#16222b}</style>';
+function assetize(s){
+  return s.replace(/(src\s*=\s*["'])([^"']+)(["'])/gi,function(m,a,n,b){return ASSETS[n]?a+ASSETS[n]+b:m})
+          .replace(/url\(\s*["']?([^"')]+)["']?\s*\)/gi,function(m,n){return ASSETS[n]?'url("'+ASSETS[n]+'")':m});
+}
+function buildDoc(html,css){
+  var st='<style>\n'+css.replace(/<\/style/gi,'<\\/style')+'\n</style>',out=html,linked=false;
+  out=out.replace(/<link\b[^>]*href\s*=\s*["']style\.css["'][^>]*>/i,function(){linked=true;return st});
+  if(!linked){ if(/<\/head>/i.test(out))out=out.replace(/<\/head>/i,st+'</head>'); else out=st+out; }
+  if(/<head[^>]*>/i.test(out))out=out.replace(/<head[^>]*>/i,function(m){return m+PRE});
+  else out=PRE+out;
+  return assetize(out);
+}
+function paint(fr,html){
+  try{
+    var d=fr.contentDocument;
+    if(d){
+      d.open();d.write(html);d.close();
+      d.addEventListener('click',function(e){var t=e.target;while(t&&t.tagName!=='A')t=t.parentNode;if(t&&t.tagName==='A')e.preventDefault()});
+      d.addEventListener('submit',function(e){e.preventDefault()});
+      return d;
+    }
+  }catch(err){}
+  fr.srcdoc=html;return null;
+}
+
+/* ===================== state & persistence ===================== */
+var S={code:{},done:{},rev:{},ans:{},ref:{},sa:{},tk:{},vis:{},step:0,hint:{}};
+function loadLocal(){
+  if(!LS)return;
+  try{var o=JSON.parse(LS.getItem(STORE_KEY)||'null');if(o)for(var k in S)if(o[k]!=null)S[k]=o[k]}catch(e){}
+}
+var saveT=null;
+function save(){clearTimeout(saveT);saveT=setTimeout(function(){
+  if(LS)try{LS.setItem(STORE_KEY,JSON.stringify(S))}catch(e){}
+  SCORM.push();
+},500)}
+
+/* ===================== SCORM 1.2 runtime ===================== */
+var SCORM=(function(){
+  var api=null,started=0,finished=false,lastPush='',commitT=null,startTime=Date.now(),name='';
+  function find(w){var n=0;while(w&&!w.API&&w.parent&&w.parent!==w&&n<500){n++;w=w.parent}return w&&w.API?w.API:null}
+  function get(k){try{return api?String(api.LMSGetValue(k)):''}catch(e){return ''}}
+  function set(k,v){try{if(api)api.LMSSetValue(k,String(v))}catch(e){}}
+  function commit(){try{if(api)api.LMSCommit('')}catch(e){}}
+  function timeStr(ms){var s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60);s=s%60;function p(n,l){n=String(n);while(n.length<l)n='0'+n;return n}return p(h,4)+':'+p(m,2)+':'+p(s,2)}
+  function init(){
+    try{api=find(window);if(!api&&window.opener)api=find(window.opener)}catch(e){api=null}
+    if(!api)return false;
+    try{api.LMSInitialize('')}catch(e){api=null;return false}
+    started=1;
+    var st=get('cmi.core.lesson_status');
+    if(!st||st==='not attempted')set('cmi.core.lesson_status','incomplete');
+    name=get('cmi.core.student_name');
+    var sd=get('cmi.suspend_data');
+    if(sd){try{merge(JSON.parse(sd))}catch(e){}}
+    var loc=parseInt(get('cmi.core.lesson_location'),10);
+    if(!isNaN(loc))S.step=loc;
+    commit();
+    return true;
+  }
+  function merge(o){
+    // progress from the LMS is authoritative; free text keeps whichever version is longer
+    ['done','rev','ans','vis','sa','hint'].forEach(function(k){if(o[k])for(var x in o[k])S[k][x]=o[k][x]});
+    ['ref','tk'].forEach(function(k){if(o[k])for(var x in o[k]){var a=o[k][x],b=S[k][x];
+      if(typeof a==='string'){if(!b||a.length>b.length)S[k][x]=a}
+      else{S[k][x]=S[k][x]||{};for(var y in a){if(!S[k][x][y]||a[y].length>S[k][x][y].length)S[k][x][y]=a[y]}}}});
+  }
+  function pack(limit){
+    var o={done:S.done,rev:S.rev,ans:S.ans,vis:S.vis,sa:S.sa,hint:S.hint,ref:{},tk:{}};
+    function fill(n){
+      o.ref={};o.tk={};
+      for(var k in S.ref)if(S.ref[k])o.ref[k]=S.ref[k].slice(0,n);
+      for(var s in S.tk){o.tk[s]={};for(var i in S.tk[s])if(S.tk[s][i])o.tk[s][i]=S.tk[s][i].slice(0,n)}
+      return JSON.stringify(o);
+    }
+    var lens=[400,250,160,100,60,30,0],j;
+    for(j=0;j<lens.length;j++){var str=fill(lens[j]);if(str.length<=limit)return str}
+    return fill(0);
+  }
+  function push(){
+    if(!api||finished)return;
+    var r=result();
+    set('cmi.core.score.min',0);set('cmi.core.score.max',100);set('cmi.core.score.raw',r.score);
+    set('cmi.core.lesson_status',r.status);
+    set('cmi.core.lesson_location',S.step);
+    var sd=pack(4000);
+    if(sd!==lastPush){set('cmi.suspend_data',sd);lastPush=sd}
+    clearTimeout(commitT);commitT=setTimeout(commit,1500);
+  }
+  function finish(){
+    if(!api||finished)return;
+    push();
+    set('cmi.core.session_time',timeStr(Date.now()-startTime));
+    set('cmi.core.exit','suspend');
+    commit();
+    try{api.LMSFinish('')}catch(e){}
+    finished=true;
+  }
+  return {init:init,push:push,finish:finish,on:function(){return !!api},name:function(){return name}};
+})();
+
+/* ===================== scoring ===================== */
+var EXKEYS=Object.keys(EX),QZKEYS=Object.keys(QZ),PASS=70;
+function result(){
+  var ex=EXKEYS.filter(function(k){return S.done['ex:'+k]&&!S.rev[k]}).length;
+  var qz=QZKEYS.filter(function(k){return S.ans[k]!=null&&QZ[k].opts[S.ans[k]]&&QZ[k].opts[S.ans[k]][QZ[k].sketch?2:1]}).length;
+  var total=EXKEYS.length+QZKEYS.length;
+  var score=Math.round((ex+qz)/total*100);
+  var attempted=EXKEYS.every(function(k){return S.done['ex:'+k]||S.rev[k]})&&QZKEYS.every(function(k){return S.ans[k]!=null});
+  var status=score>=PASS?'passed':(attempted?'completed':'incomplete');
+  return {ex:ex,qz:qz,score:score,status:status,attempted:attempted,exTotal:EXKEYS.length,qzTotal:QZKEYS.length};
+}
+
+/* ===================== steps, rail, 5E strip ===================== */
+var PH={engage:['Engage','Get curious'],explore:['Explore','Try it out'],explain:['Explain','Make sense of it'],elaborate:['Elaborate','Take it further'],evaluate:['Evaluate','Show what you know']};
+var PHORDER=['engage','explore','explain','elaborate','evaluate'];
+var SECS={flex:{n:1,name:'CSS Flexbox',sub:'Chapter 5'},grid:{n:2,name:'CSS Grid',sub:'Chapter 6'},int:{n:3,name:'Flexbox + Grid',sub:'Chapter 7'}};
+var steps=$$('.step'),cur=0,inited={},ITEMS={};
+steps.forEach(function(s,i){
+  $$('[data-task]',s).forEach(function(h){ITEMS['ex:'+h.getAttribute('data-task')]=i});
+  $$('[data-quiz]',s).forEach(function(h){ITEMS['qz:'+h.getAttribute('data-quiz')]=i});
+});
+var TOTAL=Object.keys(ITEMS).length;
+function itemDone(id){return id.indexOf('qz:')===0?S.ans[id.slice(3)]!=null:(S.done[id]||S.rev[id.slice(3)])}
+
+function firstOf(sec,ph){for(var i=0;i<steps.length;i++)if(steps[i].getAttribute('data-sec')===sec&&(!ph||steps[i].getAttribute('data-ph')===ph))return i;return -1}
+
+/* decorate section steps: kicker + 5E strip */
+steps.forEach(function(s,i){
+  var sec=s.getAttribute('data-sec'),ph=s.getAttribute('data-ph');
+  if(!SECS[sec])return;
+  var head=$('.step-head',s);
+  var k=el('div','step-kicker','<span class="phase-tag">'+PH[ph][0]+' · '+PH[ph][1]+'</span>Section '+SECS[sec].n+' · '+SECS[sec].name+' · '+SECS[sec].sub);
+  head.insertBefore(k,head.firstChild);
+  var five=el('div','five');five.setAttribute('aria-label','5E phases in this section');
+  PHORDER.forEach(function(p){
+    var b=el('button','','<b>'+(PHORDER.indexOf(p)+1)+' · '+PH[p][0]+'</b><span>'+PH[p][1]+'</span>');
+    b.type='button';b.setAttribute('data-ph',p);if(p===ph)b.setAttribute('aria-current','true');
+    b.addEventListener('click',function(){var j=firstOf(sec,p);if(j>=0)show(j)});
+    five.appendChild(b);
+  });
+  s.insertBefore(five,s.firstChild);
+});
+
+/* rail */
+var rail=$('#rail'),railItems=[],secBtns={};
+(function buildRail(){
+  var lastSec=null,lastPh=null,group=null;
+  steps.forEach(function(s,i){
+    var sec=s.getAttribute('data-sec'),ph=s.getAttribute('data-ph');
+    if(sec!==lastSec){
+      lastSec=sec;lastPh=null;group=null;
+      if(SECS[sec]){
+        var b=el('button','rail-sec','<span class="num">'+SECS[sec].n+'</span><span style="flex:1;min-width:0"><span class="nm">'+SECS[sec].name+'</span><span class="sub">'+SECS[sec].sub+' · <i data-c="'+sec+'">0/0</i></span><span class="bar"><i data-b="'+sec+'"></i></span></span>');
+        b.type='button';b.setAttribute('aria-expanded','false');
+        b.addEventListener('click',function(){show(firstOf(sec))});
+        rail.appendChild(b);secBtns[sec]=b;
+        group=el('div','rail-group');group.setAttribute('data-g',sec);group.hidden=true;rail.appendChild(group);
+      }
+    }
+    var host=group||rail;
+    if(group&&ph!==lastPh){lastPh=ph;var h=el('div','rail-phase','<span class="pdot"></span>'+PH[ph][0]+' · '+PH[ph][1]);h.setAttribute('data-ph',ph);host.appendChild(h)}
+    var it=el('button','rail-item'+(group?'':' rail-plain'),'<span class="rail-dot">✓</span><span>'+s.getAttribute('data-title')+'</span>');
+    it.type='button';it.setAttribute('data-done','0');
+    it.addEventListener('click',function(){show(i)});
+    host.appendChild(it);railItems[i]=it;
+  });
+})();
+
+/* prev / next */
+steps.forEach(function(s,i){
+  var nav=el('div','stepnav');
+  nav.innerHTML=(i>0?'<button class="btn" type="button" data-n="-1">&larr; Back</button>':'')+
+    '<span class="spacer"></span><span class="pos">Step '+(i+1)+' of '+steps.length+'</span>'+
+    (i<steps.length-1?'<button class="btn primary" type="button" data-n="1">Next: '+steps[i+1].getAttribute('data-title')+' &rarr;</button>':'');
+  nav.addEventListener('click',function(e){var b=e.target.closest('button[data-n]');if(b)show(i+parseInt(b.getAttribute('data-n'),10))});
+  s.appendChild(nav);
+});
+
+/* ===================== progress ===================== */
+function updateProgress(){
+  var n=0;for(var id in ITEMS)if(itemDone(id))n++;
+  var pct=TOTAL?Math.round(n/TOTAL*100):0;
+  $('#progFill').style.width=pct+'%';
+  $('#progTxt').textContent=n+' / '+TOTAL+' done';
+  steps.forEach(function(s,i){
+    var ids=Object.keys(ITEMS).filter(function(id){return ITEMS[id]===i});
+    var d=ids.length?ids.every(itemDone):!!S.vis[i];
+    if(railItems[i])railItems[i].setAttribute('data-done',d?'1':'0');
+  });
+  Object.keys(SECS).forEach(function(sec){
+    var ids=Object.keys(ITEMS).filter(function(id){return steps[ITEMS[id]].getAttribute('data-sec')===sec});
+    var d=ids.filter(itemDone).length;
+    var c=$('[data-c="'+sec+'"]',rail),b=$('[data-b="'+sec+'"]',rail);
+    if(c)c.textContent=d+'/'+ids.length+' tasks';
+    if(b)b.style.width=(ids.length?d/ids.length*100:0)+'%';
+  });
+  if(W._score)W._score();
+}
+
+/* ===================== the dock (code bench) ===================== */
+var dock=$('#dock'),editor=$('#editor'),gutter=$('#gutter'),preview=$('#preview'),stage=$('#stage');
+var chkW=$('#chkWide'),chkN=$('#chkNarrow');
+var curWs=null,curFile='html',runT=null,lastK=null,runTok=0;
+function wsCode(k){if(!S.code[k])S.code[k]={html:WS[k].html,css:WS[k].css};return S.code[k]}
+function setFile(f){
+  curFile=f;
+  $$('.ptab',dock).forEach(function(t){t.setAttribute('aria-selected',t.getAttribute('data-f')===f?'true':'false')});
+  if(curWs){editor.value=wsCode(curWs)[f];editor.scrollTop=0;editor.scrollLeft=0;lines()}
+}
+function lines(){var n=editor.value.split('\n').length,o='';for(var i=1;i<=n;i++)o+=i+'\n';gutter.textContent=o;gutter.scrollTop=editor.scrollTop}
+function loadWs(k,title){
+  curWs=k;
+  $('#dockTitle').innerHTML='Code bench · <b>'+esc(title)+'</b>';
+  setFile(k==='i-draw'?'html':'css');
+  buildBrief();
+  run();
+}
+function run(){
+  if(!curWs)return;
+  var c=wsCode(curWs),doc=buildDoc(c.html,c.css);
+  paint(preview,doc);
+  var task=WS[curWs].task;
+  if(task){
+    var K={w:paint(chkW,doc),n:paint(chkN,doc),html:c.html,css:c.css},tok=++runTok;
+    lastK=K;evalTask(task,K,false);
+    // images decode asynchronously: re-check once they have their real size
+    var imgs=[].concat(K.w?all(K.w,'img'):[],K.n?all(K.n,'img'):[]).filter(function(im){return !im.complete});
+    if(imgs.length)Promise.all(imgs.map(function(im){return new Promise(function(res){im.addEventListener('load',res);im.addEventListener('error',res)})})).then(function(){if(tok===runTok&&lastK===K)evalTask(task,K,false)});
+  }else $('#dockTick').textContent='';
+  outWidth();
+}
+function schedule(){clearTimeout(runT);runT=setTimeout(function(){run();save()},400)}
+editor.addEventListener('input',function(){if(!curWs)return;wsCode(curWs)[curFile]=editor.value;lines();schedule()});
+editor.addEventListener('scroll',function(){gutter.scrollTop=editor.scrollTop});
+editor.addEventListener('keydown',function(e){
+  if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();run()}
+  if(e.key==='Tab'&&!e.shiftKey){e.preventDefault();var s=editor.selectionStart;editor.value=editor.value.slice(0,s)+'  '+editor.value.slice(editor.selectionEnd);editor.selectionStart=editor.selectionEnd=s+2;editor.dispatchEvent(new Event('input'))}
+  if(e.key==='Escape'&&dock.classList.contains('max')){e.preventDefault();setMax(false)}
+});
+$$('.ptab',dock).forEach(function(t){t.addEventListener('click',function(){setFile(t.getAttribute('data-f'))})});
+function setCode(c){var w=wsCode(curWs);if(c.html!=null)w.html=c.html;if(c.css!=null)w.css=c.css;setFile(c.css!=null&&c.html==null?'css':curFile);run();save()}
+dock.addEventListener('click',function(e){
+  var b=e.target.closest('[data-d]');if(!b)return;
+  var a=b.getAttribute('data-d');
+  if(a==='run')run();
+  if(a==='reset'&&curWs){S.code[curWs]={html:WS[curWs].html,css:WS[curWs].css};setFile(curFile);run();save()}
+  if(a==='max')setMax(true);
+  if(a==='min')setMax(false);
+  if(a==='brief')dock.classList.toggle('nobrief');
+});
+function setMax(on){
+  dock.classList.toggle('max',on);
+  document.body.classList.toggle('dock-max',on);
+  if(on){buildBrief();editor.focus()}
+  else{var t=$('[data-task]',steps[cur]);if(t&&t.scrollIntoView)try{t.scrollIntoView({block:'nearest'})}catch(e){}}
+  setTimeout(outWidth,280);
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&dock.classList.contains('max'))setMax(false)});
+
+/* device widths */
+$$('[data-dev]',dock).forEach(function(b){b.addEventListener('click',function(){
+  var d=b.getAttribute('data-dev');stage.setAttribute('data-dev',d);
+  $$('[data-dev]',dock).forEach(function(x){if(x.tagName==='BUTTON')x.setAttribute('aria-pressed',x===b?'true':'false')});
+  setTimeout(outWidth,280);
+})});
+function outWidth(){var w=preview.clientWidth;$('#outW').textContent=w?w+' px wide':''}
+window.addEventListener('resize',outWidth);
+
+/* resizing: dock width and editor/output split */
+(function(){
+  var saved=LS?LS.getItem(STORE_KEY+':dock'):null;
+  if(saved){try{var o=JSON.parse(saved);if(o.w)document.documentElement.style.setProperty('--dock-w',o.w+'px');if(o.e)dock.style.setProperty('--ed-size',o.e+'%');if(o.x)dock.style.setProperty('--ed-size-x',o.x+'%')}catch(e){}}
+  var pref={};try{pref=JSON.parse(saved||'{}')}catch(e){}
+  function keep(){if(LS)try{LS.setItem(STORE_KEY+':dock',JSON.stringify(pref))}catch(e){}}
+  function drag(handle,move){
+    handle.addEventListener('pointerdown',function(e){
+      e.preventDefault();dock.classList.add('dragging');
+      try{handle.setPointerCapture(e.pointerId)}catch(x){}
+      function mv(ev){move(ev)}
+      function up(){dock.classList.remove('dragging');handle.removeEventListener('pointermove',mv);handle.removeEventListener('pointerup',up);handle.removeEventListener('pointercancel',up);keep();outWidth()}
+      handle.addEventListener('pointermove',mv);handle.addEventListener('pointerup',up);handle.addEventListener('pointercancel',up);
+    });
+  }
+  drag($('#dockResize'),function(e){
+    var w=Math.max(340,Math.min(window.innerWidth-256-380,window.innerWidth-e.clientX));
+    document.documentElement.style.setProperty('--dock-w',w+'px');pref.w=Math.round(w);
+  });
+  drag($('#dsplit'),function(e){
+    var body=$('#edPane').parentNode.getBoundingClientRect();
+    if(dock.classList.contains('max')&&window.innerWidth>860){
+      var brief=$('#maxBrief'),bw=(brief&&brief.offsetParent)?brief.getBoundingClientRect().width:0;
+      var p=(e.clientX-body.left-bw)/body.width*100;p=Math.max(15,Math.min(65,p));
+      dock.style.setProperty('--ed-size-x',p+'%');pref.x=Math.round(p);
+    }else{
+      var p2=(e.clientY-body.top)/body.height*100;p2=Math.max(15,Math.min(85,p2));
+      dock.style.setProperty('--ed-size',p2+'%');pref.e=Math.round(p2);
+    }
+  });
+  // keyboard access for the splitter
+  [$('#dockResize'),$('#dsplit')].forEach(function(h){h.setAttribute('tabindex','-1')});
+})();
+
+/* ===================== tasks ===================== */
+var TUI={};
+function buildTask(host,key){
+  var x=EX[key];if(!x)return;
+  var box=el('div','task');
+  box.innerHTML='<div class="task-head"><span class="badge'+(x.cap?' cap':'')+'">'+(x.badge||'Exercise')+'</span>'+
+    '<h3>'+x.title+'</h3><span class="state">0/'+x.checks.length+'</span></div>'+
+    '<div class="task-brief">'+x.brief+'</div><div class="where">Write your code in the bench on the right — requirements tick themselves as you type</div>';
+  var acts=el('div','actions');
+  acts.innerHTML='<button class="btn primary" type="button" data-a="check">Check my work</button>'+
+    '<button class="btn" type="button" data-a="max">Pop out the bench</button>'+
+    '<button class="btn ghost" type="button" data-a="hint">Hint</button>'+
+    '<button class="btn ghost" type="button" data-a="sol">Show solution</button>';
+  var fb=el('div','feedback'),hb=el('div','hintbox');hb.hidden=true;
+  var list=el('ul','checklist');
+  x.checks.forEach(function(c,i){var li=el('li','','<span class="mk">'+(i+1)+'</span><span>'+c[0]+'</span>');list.appendChild(li)});
+  box.appendChild(acts);box.appendChild(fb);box.appendChild(hb);box.appendChild(list);
+  acts.addEventListener('click',function(e){
+    var btn=e.target.closest('button[data-a]');if(!btn)return;
+    var a=btn.getAttribute('data-a');
+    if(a==='max'){setMax(true);return}
+    if(a==='hint'){
+      var hi=S.hint[key]||0;var h=x.hints[Math.min(hi,x.hints.length-1)];S.hint[key]=Math.min(hi+1,x.hints.length);
+      hb.hidden=false;hb.innerHTML='<b>Hint '+S.hint[key]+' of '+x.hints.length+'</b>'+hintHTML(h);save();return;
+    }
+    if(a==='sol'){
+      if(S.done['ex:'+key]||S.rev[key]||btn.getAttribute('data-confirm')){
+        if(!S.done['ex:'+key])S.rev[key]=1;
+        if(curWs&&WS[curWs].task===key)setCode(x.solution);
+        fb.className='feedback no show';
+        fb.innerHTML='The model answer is now in the bench. Read it line by line, then press <b>Reset</b> and type it yourself — that is the part that sticks.'+(S.done['ex:'+key]?'':' <i>(This exercise no longer counts toward your score.)</i>');
+        btn.removeAttribute('data-confirm');btn.textContent='Show solution';
+        updateProgress();save();
+      }else{
+        btn.setAttribute('data-confirm','1');btn.textContent='Yes, show it';
+        fb.className='feedback no show';
+        fb.innerHTML='<b>Are you sure?</b> If you show the solution before finishing, this exercise will not count toward your score. Try a <b>Hint</b> first. Press <b>Yes, show it</b> to continue.';
+      }
+      return;
+    }
+    if(a==='check'){if(lastK&&curWs&&WS[curWs].task===key)evalTask(key,lastK,true);else run()}
+  });
+  host.appendChild(box);
+  TUI[key]={box:box,list:list,fb:fb,hb:hb};
+  if(S.hint[key]){hb.hidden=false;hb.innerHTML='<b>Hint '+S.hint[key]+' of '+x.hints.length+'</b>'+hintHTML(x.hints[S.hint[key]-1])}
+  markTaskState(key);
+}
+function hintHTML(h){return '<span style="font-family:var(--f-mono);font-size:13px">'+esc(h)+'</span>'}
+function markTaskState(key){
+  var u=TUI[key];if(!u)return;
+  var d=S.done['ex:'+key];u.box.classList.toggle('done',!!d);
+  if(d)$('.state',u.box).textContent=S.rev[key]?'completed (assisted)':'completed';
+  else if(S.rev[key])$('.state',u.box).textContent='solution shown';
+}
+function evalTask(key,K,explicit){
+  var x=EX[key],res=x.checks.map(function(c){try{return !!c[1](K)}catch(e){return false}});
+  var pass=res.filter(Boolean).length,allOk=pass===res.length;
+  var lists=[];if(TUI[key])lists.push(TUI[key].list);var mb=$('#maxBrief .checklist');if(mb&&mb.getAttribute('data-k')===key)lists.push(mb);
+  lists.forEach(function(list){
+    $$('li',list).forEach(function(li,i){
+      var st=res[i]?'pass':(explicit?'fail':'');
+      if(!res[i]&&li.getAttribute('data-r')==='fail'&&!explicit)st='fail';
+      li.setAttribute('data-r',st);
+      li.querySelector('.mk').textContent=res[i]?'✓':(st==='fail'?'✗':(i+1));
+    });
+  });
+  $('#dockTick').textContent=pass+' / '+res.length+' requirements met';
+  var u=TUI[key];
+  if(u){
+    if(!S.done['ex:'+key])$('.state',u.box).textContent=S.rev[key]?'solution shown · '+pass+'/'+res.length:pass+'/'+res.length;
+    if(allOk&&!S.done['ex:'+key]){
+      S.done['ex:'+key]=1;
+      u.fb.className='feedback ok show';
+      u.fb.innerHTML='<b>All '+pass+' requirements met.</b> Well done — move on when you are ready.';
+      markTaskState(key);updateProgress();save();
+    }else if(explicit){
+      u.fb.className='feedback '+(allOk?'ok':'no')+' show';
+      u.fb.innerHTML=allOk?'<b>All '+pass+' requirements met.</b> Nicely done.':'<b>'+pass+' of '+res.length+' requirements met.</b> The red lines name exactly what is missing. Press <b>Hint</b> if you are stuck.';
+    }
+  }
+  var mbs=$('#maxBrief .mb-state');if(mbs)mbs.textContent=pass+' / '+res.length+(allOk?' — complete!':'');
+}
+function buildBrief(){
+  var mb=$('#maxBrief');mb.innerHTML='';
+  if(!curWs)return;
+  var key=WS[curWs].task;
+  if(!key){mb.innerHTML='<h4>Free practice</h4><p style="font-size:14px;color:var(--ink-2)">There is no checklist on this bench — experiment freely. Press <b>Dock back</b> or <b>Esc</b> to return.</p>';return}
+  var x=EX[key];
+  mb.innerHTML='<div class="eyebrow" style="margin-bottom:4px">'+(x.badge||'Exercise')+' · <span class="mb-state"></span></div><h4>'+x.title+'</h4><div class="task-brief" style="font-size:13.5px">'+x.brief+'</div>';
+  var list=el('ul','checklist');list.setAttribute('data-k',key);
+  x.checks.forEach(function(c,i){list.appendChild(el('li','','<span class="mk">'+(i+1)+'</span><span>'+c[0]+'</span>'))});
+  mb.appendChild(list);
+  var b=el('div','actions','<button class="btn primary" type="button">Check my work</button>');
+  b.firstChild.addEventListener('click',function(){if(lastK)evalTask(key,lastK,true)});
+  mb.appendChild(b);
+  if(lastK)evalTask(key,lastK,false);
+}
+
+/* ===================== quizzes ===================== */
+function sketchHTML(t){
+  var c=['#0d6b6b','#2c5b98','#a6520c','#6a4699','#1b6a43','#9c2b22'],b=function(i,ex){return '<div style="background:'+c[i%6]+';'+(ex||'')+'"></div>'};
+  var g=function(cols,n,ex){var h='<div class="sk" style="grid-template-columns:'+cols+';'+(ex||'')+'">';for(var i=0;i<n;i++)h+=b(i);return h+'</div>'};
+  if(t==='row3')return g('1fr 1fr 1fr',3,'grid-template-rows:40px;align-content:start');
+  if(t==='col3')return g('1fr',3,'grid-template-rows:repeat(3,1fr)');
+  if(t==='grid2')return g('1fr 1fr',3);
+  if(t==='row5')return g('repeat(5,1fr)',5,'grid-template-rows:40px;align-content:start');
+  if(t==='g3x2')return g('1fr 1fr 1fr',5);
+  if(t==='g2x3')return g('1fr 1fr',5);
+  if(t==='stack')return '<div class="sk" style="grid-template-rows:28px 1fr"><div style="background:#b0c4de"></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:#fff">'+[0,1,2,3,4,5].map(function(i){return b(i)}).join('')+'</div></div>';
+  if(t==='nest')return '<div class="sk" style="grid-template-columns:30% 1fr"><div style="background:#b0c4de"></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px">'+[0,1,2,3,4,5].map(function(i){return b(i)}).join('')+'</div></div>';
+  if(t==='row7')return '<div class="sk" style="grid-template-columns:repeat(7,1fr);grid-template-rows:40px;align-content:start"><div style="background:#b0c4de"></div>'+[0,1,2,3,4,5].map(function(i){return b(i)}).join('')+'</div>';
+  return '';
+}
+function buildQuiz(host,key){
+  var qd=QZ[key];if(!qd)return;
+  var box=el('div','task');
+  box.innerHTML='<div class="task-head"><span class="badge quiz">'+(qd.sketch?'Draw the output':'Check your understanding')+'</span><h3>'+qd.q+'</h3><span class="state">unanswered</span></div>';
+  if(qd.code)box.appendChild(codeBlock(qd.code,qd.sketch?'code':'style.css'));
+  var wrap=el('div',qd.sketch?'sketches':'quiz'),why=el('div','q-why'),letters='ABCD';
+  var ci=qd.sketch?2:1;
+  qd.opts.forEach(function(o,i){
+    var btn=el('button',qd.sketch?'sketch':'opt');btn.type='button';
+    btn.innerHTML=qd.sketch?sketchHTML(o[0])+'<span class="cap">'+letters[i]+' · '+o[1]+'</span>':'<span class="lt">'+letters[i]+'</span><span>'+o[0]+'</span>';
+    btn.addEventListener('click',function(){if(S.ans[key]!=null)return;S.ans[key]=i;paintQ();updateProgress();save()});
+    wrap.appendChild(btn);
+  });
+  box.appendChild(wrap);box.appendChild(why);
+  if(qd.run){
+    var ra=el('div','actions','<button class="btn" type="button">Run it in the bench &rarr;</button>');
+    ra.firstChild.addEventListener('click',function(){if(curWs==='i-draw'){setCode({html:qd.run.html,css:qd.run.css});if(window.innerWidth<=1180)dock.scrollIntoView({behavior:'smooth'})}});
+    box.appendChild(ra);
+  }
+  function paintQ(){
+    var a=S.ans[key];if(a==null)return;
+    box.classList.add('answered');
+    $$(qd.sketch?'.sketch':'.opt',wrap).forEach(function(b,j){
+      if(qd.opts[j][ci])b.setAttribute('data-s','pass');else if(j===a)b.setAttribute('data-s','fail');
+      var lt=b.querySelector('.lt');if(lt)lt.textContent=qd.opts[j][ci]?'✓':(j===a?'✗':letters[j]);
+    });
+    var ok=qd.opts[a][ci];
+    why.className='q-why show';why.innerHTML=(ok?'<b>Correct. </b>':'<b>Not this one. </b>')+qd.why;
+    $('.state',box).textContent=ok?'correct':'reviewed';
+    if(ok)box.classList.add('done');
+  }
+  host.appendChild(box);paintQ();
+}
+
+/* ===================== reflection, self-assessment, exit ticket ===================== */
+function buildReflect(host,key){
+  var b=el('div','reflect');
+  b.innerHTML='<label for="rf-'+key+'"><small>Reflect</small>'+host.getAttribute('data-q')+'</label><textarea id="rf-'+key+'" placeholder="Type your answer…"></textarea><div class="saved"></div>';
+  var ta=$('textarea',b),sv=$('.saved',b),t=null;ta.value=S.ref[key]||'';
+  ta.addEventListener('input',function(){S.ref[key]=ta.value;sv.textContent='saving…';clearTimeout(t);t=setTimeout(function(){sv.textContent='saved';save()},600)});
+  host.appendChild(b);
+}
+function buildSA(host,sec){
+  var b=el('div','card');b.innerHTML='<h3>Self-assessment</h3><p style="font-size:14px;color:var(--ink-2)">Be honest — this helps you and your instructor see what to practise next.</p>';
+  var g=el('div','sa');S.sa[sec]=S.sa[sec]||{};
+  SA[sec].forEach(function(t,i){
+    var r=el('div','sa-row','<span>'+t+'</span><span class="sa-opts"><button type="button" data-v="0">Not yet</button><button type="button" data-v="1">Getting there</button><button type="button" data-v="2">Confident</button></span>');
+    function paintR(){$$('button',r).forEach(function(x){x.setAttribute('aria-pressed',String(S.sa[sec][i])===x.getAttribute('data-v')?'true':'false')})}
+    r.addEventListener('click',function(e){var x=e.target.closest('button');if(!x)return;S.sa[sec][i]=parseInt(x.getAttribute('data-v'),10);paintR();save()});
+    paintR();g.appendChild(r);
+  });
+  b.appendChild(g);host.appendChild(b);
+}
+function buildTicket(host,sec){
+  var b=el('div','card');b.innerHTML='<h3>Exit ticket · 3–2–1</h3>';
+  var g=el('div','ticket');S.tk[sec]=S.tk[sec]||{};
+  [3,2,1].forEach(function(n,i){
+    var r=el('div','tk','<b>'+n+'</b><div><label for="tk-'+sec+i+'">'+n+' '+TK[sec][i]+'</label><textarea id="tk-'+sec+i+'"></textarea></div>');
+    var ta=$('textarea',r);ta.value=S.tk[sec][i]||'';
+    ta.addEventListener('input',function(){S.tk[sec][i]=ta.value;save()});
+    g.appendChild(r);
+  });
+  b.appendChild(g);host.appendChild(b);
+}
+
+/* ===================== widgets ===================== */
+var W={};
+function hlBlock(code,label){return '<div class="code-bar"><span class="dot"></span>'+esc(label||'style.css')+'</div><pre><code>'+hlAuto(code,label||'css')+'</code></pre>'}
+function chips(values,cur,attr){return values.map(function(v){return '<button class="chip" type="button" data-'+attr+'="'+v+'" aria-pressed="'+(v===cur)+'">'+v+'</button>'}).join('')}
+function pressed(host,attr,v){$$('[data-'+attr+']',host).forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-'+attr)===v?'true':'false')})}
+function items(n,labels){var h='';for(var i=0;i<n;i++)h+='<div class="it">'+(labels?labels[i]:(i+1))+'</div>';return h}
+
+W.flexAnatomy=function(host){
+  var lines=[['<div class="cards">','c'],['  <div class="card">','i'],['    <p>Rose Oud</p>','g'],['  </div>','i'],['  <div class="card">…</div>','i'],['  <div class="card">…</div>','i'],['</div>','c']];
+  host.innerHTML='<div class="anat">'+chips(['container','items','grandchild'],'','p')+'</div>';
+  var sp=el('div','split');
+  var r=el('div','render','<div class="fx" id="fa-box"><div class="it" style="text-align:left">A<p style="margin:6px 0 0;font-weight:400" id="fa-p">Rose Oud</p></div><div class="it">B</div><div class="it">C</div></div>');
+  var cb=el('div','codeblock','<div class="code-bar"><span class="dot"></span>index.html</div><pre><code>'+lines.map(function(l){return '<span class="ln" data-p="'+l[1]+'">'+hlHTML(l[0])+'</span>'}).join('')+'</code></pre>');
+  sp.appendChild(r);sp.appendChild(cb);host.appendChild(sp);
+  var tip=el('div','verdict','Pick a part above.');host.appendChild(tip);
+  var tips={container:'<b>.cards</b> is the flex container — it gets <code>display:flex</code> and decides how its children line up.',
+    items:'Each <b>.card</b> is a flex item — a direct child of the container. They are arranged automatically.',
+    grandchild:'The <b>&lt;p&gt;</b> is inside a card — a grandchild of the container, so it is <b>not</b> a flex item of .cards.'};
+  host.addEventListener('click',function(e){
+    var b=e.target.closest('[data-p]');if(!b||b.tagName!=='BUTTON')return;
+    var p=b.getAttribute('aria-pressed')==='true'?'':b.getAttribute('data-p');pressed(host,'p',p);
+    var box=$('#fa-box',r);box.classList.toggle('hl-box',p==='container');
+    $$('.it',box).forEach(function(x){x.classList.toggle('hl-item',p==='items')});
+    $('#fa-p',r).classList.toggle('hl-item',p==='grandchild');
+    var k=p==='container'?'c':p==='items'?'i':p==='grandchild'?'g':'';
+    $$('.ln',cb).forEach(function(l){l.classList.toggle('on',!!k&&l.getAttribute('data-p')===k)});
+    tip.innerHTML=p?tips[p]:'Pick a part above.';
+  });
+};
+
+W.flexDirection=function(host){
+  host.innerHTML='<div class="ctrls">'+chips(['row','column'],'row','v')+'</div>';
+  var sp=el('div','split'),r=el('div','render'),cb=el('div','codeblock');sp.appendChild(r);sp.appendChild(cb);host.appendChild(sp);
+  var v=el('div','verdict');host.appendChild(v);
+  function draw(d){
+    pressed(host,'v',d);
+    r.innerHTML='<div class="fx" style="flex-direction:'+d+'">'+items(4)+'</div><div class="axis">'+(d==='row'?'main axis: left → right':'main axis: top ↓ bottom')+'</div>';
+    cb.innerHTML=hlBlock('.flex-container {\n  display: flex;\n  flex-direction: '+d+';\n}');
+    v.innerHTML=d==='row'?'<b>row</b> — the default. Items stack horizontally, left to right.':'<b>column</b> — items stack vertically, top to bottom.';
+  }
+  host.addEventListener('click',function(e){var b=e.target.closest('[data-v]');if(b)draw(b.getAttribute('data-v'))});
+  draw('row');
+};
+
+W.flexWrap=function(host){
+  host.innerHTML='<div class="ctrls">'+chips(['nowrap','wrap'],'nowrap','v')+'<label>container width <input type="range" min="150" max="520" value="260"><span class="val"></span></label></div>';
+  var sp=el('div','split'),r=el('div','render'),cb=el('div','codeblock');sp.appendChild(r);sp.appendChild(cb);host.appendChild(sp);
+  var v=el('div','verdict');host.appendChild(v);
+  var mode='nowrap',rg=$('input',host),val=$('.val',host);
+  function draw(){
+    pressed(host,'v',mode);val.textContent=rg.value+'px';
+    r.innerHTML='<div style="overflow:visible"><div class="fx" style="width:'+rg.value+'px;flex-wrap:'+mode+'">'+items(6).replace(/class="it"/g,'class="it" style="flex:0 0 60px"')+'</div></div>';
+    cb.innerHTML=hlBlock('.flex-container {\n  display: flex;\n  flex-wrap: '+mode+';\n}');
+    var fits=6*60+5*8+20<=rg.value;
+    v.innerHTML=mode==='nowrap'?(fits?'Everything fits on one line.':'<b>nowrap</b>: the items stay on one line and spill out of the container.'):(fits?'Everything fits, so nothing needs to wrap yet.':'<b>wrap</b>: items that do not fit move to the next line.');
+  }
+  host.addEventListener('click',function(e){var b=e.target.closest('[data-v]');if(b){mode=b.getAttribute('data-v');draw()}});
+  rg.addEventListener('input',draw);draw();
+};
+
+W.flexJustify=function(host){
+  var J=['flex-start','center','flex-end','space-between','space-around','space-evenly'];
+  host.innerHTML='<div class="ctrls">'+chips(J,'center','j')+'</div><div class="ctrls"><label>align-items <select><option>stretch</option><option>flex-start</option><option selected>center</option><option>flex-end</option></select></label></div>';
+  var sp=el('div','split'),r=el('div','render'),cb=el('div','codeblock');sp.appendChild(r);sp.appendChild(cb);host.appendChild(sp);
+  var j='center',sel=$('select',host);
+  function draw(){
+    pressed(host,'j',j);
+    r.innerHTML='<div class="fx" style="height:130px;justify-content:'+j+';align-items:'+sel.value+'"><div class="it">A</div><div class="it" style="padding:22px 14px">B</div><div class="it">C</div></div>';
+    cb.innerHTML=hlBlock('.flex-container {\n  display: flex;\n  justify-content: '+j+';\n  align-items: '+sel.value+';\n}');
+  }
+  host.addEventListener('click',function(e){var b=e.target.closest('[data-j]');if(b){j=b.getAttribute('data-j');draw()}});
+  sel.addEventListener('change',draw);draw();
+};
+
+W.flexAxes=function(host){
+  host.innerHTML='<div class="ctrls">'+chips(['row','column'],'row','v')+'</div>';
+  var r=el('div','render');host.appendChild(r);
+  var v=el('div','verdict');host.appendChild(v);
+  function draw(d){
+    pressed(host,'v',d);var row=d==='row';
+    r.innerHTML='<div style="display:grid;grid-template-columns:1fr 46px;grid-template-rows:auto 34px;gap:6px;max-width:420px">'+
+      '<div class="fx" style="flex-direction:'+d+';justify-content:center;align-items:center;height:'+(row?'110px':'190px')+'">'+items(3)+'</div>'+
+      '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;font:11px var(--f-mono);color:'+(row?'#6a4699':'#0d6b6b')+'"><div style="width:3px;flex:1;background:currentColor"></div>▼<span style="writing-mode:vertical-rl;margin-top:4px">'+(row?'cross axis':'main axis')+'</span></div>'+
+      '<div style="display:flex;align-items:center;gap:6px;font:11px var(--f-mono);color:'+(row?'#0d6b6b':'#6a4699')+'"><div style="height:3px;flex:1;background:currentColor"></div>▶ '+(row?'main axis':'cross axis')+'</div><div></div></div>';
+    v.innerHTML=row?'In a <b>row</b>, <code>justify-content</code> works horizontally (main axis) and <code>align-items</code> vertically (cross axis).':'In a <b>column</b> the axes swap: <code>justify-content</code> now works vertically and <code>align-items</code> horizontally.';
+  }
+  host.addEventListener('click',function(e){var b=e.target.closest('[data-v]');if(b)draw(b.getAttribute('data-v'))});
+  draw('row');
+};
+
+W.imgWidth=function(host){
+  host.innerHTML='<div class="ctrls"><label>space available <input type="range" min="90" max="360" value="160"><span class="val"></span></label></div>';
+  var sp=el('div','split');host.appendChild(sp);var rg=$('input',host),val=$('.val',host);
+  function draw(){
+    val.textContent=rg.value+'px';var w=rg.value;
+    sp.innerHTML='<div><div class="eyebrow" style="margin-bottom:6px">width: 100%</div><div class="render"><div style="width:'+w+'px;border:2px dashed #0d6b6b"><img src="'+ASSETS['perfume.jpg']+'" style="width:100%;display:block"></div></div></div>'+
+      '<div><div class="eyebrow" style="margin-bottom:6px">max-width: 100%</div><div class="render"><div style="width:'+w+'px;border:2px dashed #0d6b6b"><img src="'+ASSETS['perfume.jpg']+'" style="max-width:100%;height:auto;display:block"></div></div></div>';
+    $$('.render',sp)[0].insertAdjacentHTML('beforeend','<div class="verdict">'+(w>220?'Stretched above its real 220px — it can turn blurry.':'Scaled down to fit.')+'</div>');
+    $$('.render',sp)[1].insertAdjacentHTML('beforeend','<div class="verdict">'+(w>220?'Stops at its real size: 220px.':'Scaled down to fit.')+'</div>');
+  }
+  rg.addEventListener('input',draw);draw();
+};
+
+W.mqAnatomy=function(host){
+  var P=[['@media','@media starts a media query: styles that apply only under certain conditions.'],
+    ['not | only','Optional keywords. <b>not</b>: apply when the condition is NOT true. <b>only</b>: apply only when it is true.'],
+    ['screen','The media type: screen, print, all, speech…'],
+    ['and','A logical operator that joins the media type and the conditions.'],
+    ['(max-width:700px)','The condition: screen width of 700 pixels or less. Conditions can also test height, orientation and more.'],
+    ['{ CSS rules }','The CSS rules inside the braces are applied only when the conditions are met.']];
+  host.innerHTML='<div class="anat">'+P.map(function(p,i){return '<button class="chip" type="button" data-m="'+i+'" aria-pressed="false" style="font-size:13.5px">'+esc(p[0])+'</button>'}).join('')+'</div>';
+  var v=el('div','verdict','Click a part of the rule.');host.appendChild(v);
+  host.appendChild(codeBlock('@media screen and (max-width: 700px) {\n  body {\n    background-color: lightblue;\n  }\n}','style.css'));
+  host.addEventListener('click',function(e){var b=e.target.closest('[data-m]');if(!b)return;pressed(host,'m',b.getAttribute('data-m'));v.innerHTML='<b>'+esc(P[b.getAttribute('data-m')][0])+'</b> — '+P[b.getAttribute('data-m')][1]});
+};
+
+function vpSim(host,draw,start){
+  host.insertAdjacentHTML('beforeend','<div class="ctrls"><label>screen width <input type="range" min="320" max="1000" step="10" value="'+(start||900)+'"><span class="val"></span></label><span class="verdict" data-o></span></div>');
+  var rg=$('input[type=range]',host),val=$('.val',host),out=$('[data-o]',host);
+  var wrap=el('div','');wrap.style.cssText='overflow:hidden;position:relative';
+  var mb=el('div','mini-browser');mb.innerHTML='<div class="mb-bar"><i></i><i></i><i></i><span data-w></span></div><div class="mb-body"></div>';
+  wrap.appendChild(mb);host.appendChild(wrap);
+  var cb=el('div','codeblock');host.appendChild(cb);
+  function go(){
+    var w=+rg.value,on=w<=700;val.textContent=w+'px';
+    mb.style.width=w+'px';
+    $('[data-w]',mb).textContent=w+' px';
+    var r=draw($('.mb-body',mb),on,w);
+    cb.innerHTML=r.code;
+    out.innerHTML='media query: <b style="color:'+(on?'var(--good)':'var(--ink-3)')+'">'+(on?'ON (≤ 700px)':'off')+'</b>';
+    var s=Math.min(1,wrap.clientWidth/w||1);
+    mb.style.transformOrigin='0 0';mb.style.transform='scale('+s+')';
+    wrap.style.height=Math.ceil(mb.offsetHeight*s)+'px';
+  }
+  rg.addEventListener('input',go);window.addEventListener('resize',go);setTimeout(go,0);go();
+}
+function mqCode(base,inside){return '<div class="code-bar"><span class="dot"></span>style.css</div><pre><code>'+hlCSS(base)+'\n'+inside+'</code></pre>'}
+function mqBlock(inner,on){var t=hlCSS('@media screen and (max-width:700px) {\n'+inner+'\n}');return on?'<span class="ln on" style="display:block">'+t+'</span>':'<span style="opacity:.55">'+t+'</span>'}
+
+W.mqNav=function(host){
+  vpSim(host,function(b,on){
+    b.innerHTML='<div style="display:flex;flex-direction:'+(on?'column':'row')+';background:#f2f5f7">'+
+      ['Home','Catalog','Add to Cart','About us','Log in'].map(function(t){return '<a style="margin:10px;padding:10px;font:14px arial;color:#fff;text-decoration:none;width:100px;text-align:center;background:DodgerBlue">'+t+'</a>'}).join('')+'</div>';
+    return {code:mqCode('.link-flex-container {\n  display: flex;\n}',mqBlock('  .link-flex-container {\n    flex-direction: column;\n  }',on))};
+  },900);
+};
+
+W.gridColumns=function(host){
+  host.innerHTML='<div class="ctrls"><button class="chip" type="button" data-c="-">&minus; column</button><button class="chip" type="button" data-c="+">+ column</button>'+
+    '<label>or type <input type="text" value="1fr 1fr 1fr" style="width:160px;font:13px var(--f-mono);padding:4px 7px;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);color:var(--ink)"></label></div>';
+  var sp=el('div','split'),r=el('div','render'),cb=el('div','codeblock');sp.appendChild(r);sp.appendChild(cb);host.appendChild(sp);
+  var v=el('div','verdict');host.appendChild(v);var inp=$('input',host);
+  function draw(){
+    var t=inp.value.trim()||'1fr';
+    r.innerHTML='<div class="gx" style="grid-template-columns:'+esc(t)+'">'+items(8)+'</div>';
+    cb.innerHTML=hlBlock('.grid-container {\n  display: grid;\n  grid-template-columns: '+t+';\n}');
+    var g=$('.gx',r),cols=getComputedStyle(g).gridTemplateColumns.split(' ').filter(Boolean);
+    v.innerHTML=cols.length&&cols[0]!=='none'?'<b>'+cols.length+'</b> column'+(cols.length>1?'s':'')+' → '+Math.ceil(8/cols.length)+' rows for 8 items. Widths: '+cols.map(function(c){return Math.round(parseFloat(c))+'px'}).join(' · '):'That value is not valid CSS — the browser ignores it.';
+  }
+  host.addEventListener('click',function(e){var b=e.target.closest('[data-c]');if(!b)return;var n=inp.value.trim().split(/\s+/).length;n=Math.max(1,Math.min(6,n+(b.getAttribute('data-c')==='+'?1:-1)));inp.value=Array(n+1).join('1fr ').trim();draw()});
+  inp.addEventListener('input',draw);draw();
+};
+
+W.gridFr=function(host){
+  host.innerHTML='<div class="ctrls"><label>column 1 <input type="range" min="1" max="6" value="1" data-i="a"><span class="val" data-v="a"></span></label><label>column 2 <input type="range" min="1" max="6" value="4" data-i="b"><span class="val" data-v="b"></span></label></div>';
+  var r=el('div','render');host.appendChild(r);var cb=el('div','codeblock');host.appendChild(cb);
+  function draw(){
+    var a=+$('[data-i=a]',host).value,b=+$('[data-i=b]',host).value,t=a+b;
+    $('[data-v=a]',host).textContent=a+'fr';$('[data-v=b]',host).textContent=b+'fr';
+    r.innerHTML='<div class="gx" style="grid-template-columns:'+a+'fr '+b+'fr"><div class="it">'+a+'fr = '+a+'/'+t+' = '+Math.round(a/t*100)+'%</div><div class="it" style="background:#a6520c">'+b+'fr = '+b+'/'+t+' = '+Math.round(b/t*100)+'%</div></div><div class="verdict">Total: <b>'+a+' + '+b+' = '+t+' fractions</b>. Each column gets its share of the width.</div>';
+    cb.innerHTML=hlBlock('.grid-container {\n  display: grid;\n  grid-template-columns: '+a+'fr '+b+'fr;\n}');
+  }
+  $$('input',host).forEach(function(i){i.addEventListener('input',draw)});draw();
+};
+
+W.gridGap=function(host){
+  host.innerHTML='<div class="ctrls"><label>gap <input type="range" min="0" max="40" value="10" data-i="g"><span class="val" data-v="g"></span></label><label>padding <input type="range" min="0" max="40" value="0" data-i="p"><span class="val" data-v="p"></span></label></div>';
+  var sp=el('div','split'),r=el('div','render'),cb=el('div','codeblock');sp.appendChild(r);sp.appendChild(cb);host.appendChild(sp);
+  function draw(){
+    var g=$('[data-i=g]',host).value,p=$('[data-i=p]',host).value;
+    $('[data-v=g]',host).textContent=g+'px';$('[data-v=p]',host).textContent=p+'px';
+    r.innerHTML='<div class="gx" style="grid-template-columns:1fr 1fr 1fr;gap:'+g+'px;padding:'+p+'px;background:#f8e9d6;border-color:#a6520c">'+items(6)+'</div><div class="verdict">Beige = space. <b>gap</b> is between cells; <b>padding</b> is around the outside.</div>';
+    cb.innerHTML=hlBlock('.grid-container {\n  display: grid;\n  grid-template-columns: 1fr 1fr 1fr;\n  gap: '+g+'px;\n  padding: '+p+'px;\n}');
+  }
+  $$('input',host).forEach(function(i){i.addEventListener('input',draw)});draw();
+};
+
+W.gridAnatomy=function(host){
+  var T={'grid container':'The element with <code>display:grid</code>. It owns the columns, rows and gaps.',
+    'grid item':'Every direct child of the grid container. Here: six items.',
+    'column track':'One column, from top to bottom. <code>grid-template-columns</code> sets how many there are and how wide each is.',
+    'row track':'One row. Rows are created automatically — as many as needed for the items.',
+    'gap':'The space between tracks — never around the outside.',
+    'fr':'A fraction of the free space. Here every column is <code>1fr</code>, so they are equal.'};
+  host.innerHTML='<div class="anat">'+chips(Object.keys(T),'','p')+'</div>';
+  var r=el('div','render');host.appendChild(r);var v=el('div','verdict','Pick a term above.');host.appendChild(v);
+  function draw(p){
+    pressed(host,'p',p);
+    var h='<div class="gx" style="grid-template-columns:1fr 1fr 1fr;gap:12px;'+(p==='gap'?'background:#f8e9d6;border-color:#a6520c;':'')+(p==='grid container'?'outline:3px solid #a6520c;outline-offset:2px;':'')+'">';
+    for(var i=0;i<6;i++){
+      var on=(p==='grid item')||(p==='column track'&&i%3===1)||(p==='row track'&&i<3);
+      h+='<div class="it" style="'+(on?'outline:3px solid #6a4699;outline-offset:1px;':'')+(p&&!on&&p!=='grid container'&&p!=='gap'&&p!=='fr'?'opacity:.35':'')+'">'+(p==='fr'&&i<3?'1fr':(i+1))+'</div>';
+    }
+    r.innerHTML=h+'</div>';v.innerHTML=p?'<b>'+p+'</b> — '+T[p]:'Pick a term above.';
+  }
+  host.addEventListener('click',function(e){var b=e.target.closest('[data-p]');if(b)draw(b.getAttribute('aria-pressed')==='true'?'':b.getAttribute('data-p'))});
+  draw('');
+};
+
+W.gridResp=function(host){
+  vpSim(host,function(b,on){
+    b.innerHTML='<div style="display:grid;grid-template-columns:'+(on?'1fr 1fr':'1fr 1fr 1fr')+';gap:14px">'+PERF.map(function(p,i){return '<div style="background:rgb(243,228,209);text-align:center;padding:12px;font:13px arial"><img src="'+ASSETS['perfume'+(i+1)+'.jpg']+'" style="max-width:100%;height:auto;display:block;margin:0 auto 6px">'+p[0]+'<br>'+p[1]+' AED</div>'}).join('')+'</div>';
+    return {code:mqCode('.grid-container {\n  display: grid;\n  grid-template-columns: 1fr 1fr 1fr;\n  gap: 20px;\n}',mqBlock('  .grid-container {\n    grid-template-columns: 1fr 1fr;\n  }',on))};
+  },900);
+};
+
+W.sorter=function(host){
+  var L=[['A navigation bar with five links in one row','flex','One row of items — one dimension.'],
+    ['A photo gallery, 4 columns × 3 rows that line up','grid','Rows and columns that align — two dimensions.'],
+    ['A toolbar of buttons with even spacing between them','flex','Spacing along one line is what justify-content does best.'],
+    ['A product catalogue: 3 cards across on a laptop, 2 on a phone','grid','A card grid; a media query changes the column count.'],
+    ['A logo and a heading centred on one line','flex','One line, centred on both axes.'],
+    ['A whole page: header, sidebar, content and footer','grid','Page structure in rows and columns (often with flex inside the parts).']];
+  var g=el('div','sorter');
+  L.forEach(function(x,i){
+    var r=el('div','sc','<span>'+x[0]+'</span><span class="sa-opts"><button type="button" data-v="flex">Flexbox</button><button type="button" data-v="grid">Grid</button></span><span class="why" hidden></span>');
+    r.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;var ok=b.getAttribute('data-v')===x[1];
+      r.setAttribute('data-r',ok?'pass':'fail');var w=$('.why',r);w.hidden=false;w.innerHTML=(ok?'<b>Yes.</b> ':'<b>Think again.</b> ')+(ok?x[2]:'Is it one line, or rows and columns that line up?')});
+    g.appendChild(r);
+  });
+  host.appendChild(g);
+};
+
+W.compare=function(host){
+  host.innerHTML='<div class="ctrls">'+chips(['flex + wrap','grid (3 columns)'],'flex + wrap','m')+'<label>width <input type="range" min="260" max="560" value="380"><span class="val"></span></label></div>';
+  var sp=el('div','split'),r=el('div','render'),cb=el('div','codeblock');sp.appendChild(r);sp.appendChild(cb);host.appendChild(sp);
+  var v=el('div','verdict');host.appendChild(v);
+  var m='flex + wrap',rg=$('input',host),N=['Rose','Ocean Musk','Amber','Fresh Vetiver','Violet','Saffron Dusk'];
+  function draw(){
+    pressed(host,'m',m);$('.val',host).textContent=rg.value+'px';
+    var fl=m==='flex + wrap';
+    r.innerHTML='<div class="'+(fl?'fx':'gx')+'" style="width:'+rg.value+'px;max-width:100%;'+(fl?'flex-wrap:wrap':'grid-template-columns:1fr 1fr 1fr')+'">'+N.map(function(n){return '<div class="it">'+n+'</div>'}).join('')+'</div>';
+    cb.innerHTML=hlBlock(fl?'.items {\n  display: flex;\n  flex-wrap: wrap;\n}':'.items {\n  display: grid;\n  grid-template-columns: 1fr 1fr 1fr;\n}');
+    v.innerHTML=fl?'<b>Flexbox</b> sizes each item by its content, line by line — the second row does not line up with the first.':'<b>Grid</b> defines the columns first, so every row lines up — a two-dimensional layout.';
+  }
+  host.addEventListener('click',function(e){var b=e.target.closest('[data-m]');if(b){m=b.getAttribute('data-m');draw()}});
+  rg.addEventListener('input',draw);draw();
+};
+
+W.nestTree=function(host){
+  var R={'.flex-con':['Flex container','Its two direct children — .side and .grid-con — are flex items, placed side by side in a row.'],
+    '.side':['Flex item','A direct child of .flex-con. Nothing inside it is arranged by flex or grid.'],
+    '.grid-con':['Flex item AND grid container','A flex item of .flex-con (it sits beside the sidebar) — and, because it has display:grid, a grid container for the six images.'],
+    'img':['Grid item','A direct child of .grid-con, so it is placed in a grid cell. It is not a flex item: .flex-con only reaches its direct children.']};
+  host.innerHTML='<div class="anat">'+chips(Object.keys(R),'','p')+'</div>';
+  var sp=el('div','split'),r=el('div','render'),cb=el('div','codeblock');sp.appendChild(r);sp.appendChild(cb);host.appendChild(sp);
+  var lines=[['<div class="flex-con">','.flex-con'],['  <div class="side">…</div>','.side'],['  <div class="grid-con">','.grid-con'],['    <img src="img1.jpg">','img'],['    <img src="img2.jpg"> …','img'],['  </div>','.grid-con'],['</div>','.flex-con']];
+  cb.innerHTML='<div class="code-bar"><span class="dot"></span>index.html</div><pre><code>'+lines.map(function(l){return '<span class="ln" data-p="'+l[1]+'">'+hlHTML(l[0])+'</span>'}).join('')+'</code></pre>';
+  var v=el('div','verdict','Click an element above.');host.appendChild(v);
+  function draw(p){
+    pressed(host,'p',p);
+    var o=function(k){return p===k?'outline:3px solid #a6520c;outline-offset:2px;':''};
+    r.innerHTML='<div style="display:flex;background:lightsalmon;padding:10px;gap:0;'+o('.flex-con')+'"><div style="background:lightsteelblue;padding:10px;font:12px arial;'+o('.side')+'"><b>Sidebar</b><br>Content</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;background:#fff;padding:8px;flex:1;'+o('.grid-con')+'">'+[1,2,3,4,5,6].map(function(i){return '<img src="'+ASSETS['img'+i+'.jpg']+'" style="max-width:100%;display:block;'+(p==='img'?'outline:3px solid #6a4699;':'')+'">'}).join('')+'</div></div>';
+    $$('.ln',cb).forEach(function(l){l.classList.toggle('on',!!p&&l.getAttribute('data-p')===p)});
+    v.innerHTML=p?'<b>'+p+' — '+R[p][0]+'.</b> '+R[p][1]:'Click an element above.';
+  }
+  host.addEventListener('click',function(e){var b=e.target.closest('[data-p]');if(b&&b.tagName==='BUTTON')draw(b.getAttribute('aria-pressed')==='true'?'':b.getAttribute('data-p'))});
+  draw('');
+};
+
+W.intResp=function(host){
+  vpSim(host,function(b,on){
+    b.innerHTML='<div style="display:flex;flex-direction:'+(on?'column':'row')+';background:lightsalmon;padding:14px"><div style="background:lightsteelblue;padding:14px;font:13px arial"><b>Sidebar</b><br>Content in the sidebar.</div>'+
+      '<div style="display:grid;grid-template-columns:'+(on?'1fr 1fr':'1fr 1fr 1fr')+';gap:14px;background:#fff;padding:14px">'+[1,2,3,4,5,6].map(function(i){return '<img src="'+ASSETS['img'+i+'.jpg']+'" style="max-width:100%;display:block">'}).join('')+'</div></div>';
+    return {code:mqCode('.flex-con { display: flex; flex-direction: row; }\n.grid-con { display: grid; grid-template-columns: 1fr 1fr 1fr; }',mqBlock('  .flex-con { flex-direction: column; }\n  .grid-con { grid-template-columns: 1fr 1fr; }',on))};
+  },900);
+};
+
+W.scoreCard=function(host){
+  W._score=function(){
+    var r=result();
+    host.innerHTML='<div class="score-card"><div><b>'+r.score+'%</b><span>Lab score (pass mark '+PASS+'%)</span></div><div><b>'+r.ex+'/'+r.exTotal+'</b><span>Coding exercises completed</span></div><div><b>'+r.qz+'/'+r.qzTotal+'</b><span>Questions answered correctly</span></div><div><b style="text-transform:capitalize">'+r.status+'</b><span>Status '+(SCORM.on()?'sent to Blackboard':'(preview — not connected to Blackboard)')+'</span></div></div>';
+  };
+  W._score();
+};
+
+/* ===================== report ===================== */
+function report(){
+  var r=result(),nm=SCORM.name()||'';
+  var h='<!DOCTYPE html><html><head><meta charset="utf-8"><title>Flexbox & Grid Lab report</title><style>body{font:15px/1.6 Arial,sans-serif;max-width:760px;margin:30px auto;padding:0 20px;color:#152530}h1{font-size:24px}h2{font-size:18px;border-bottom:2px solid #0d6b6b;padding-bottom:4px;margin-top:28px}td,th{border:1px solid #ccd5db;padding:6px 9px;text-align:left;vertical-align:top}table{border-collapse:collapse;width:100%}th{background:#e9eef1}.q{color:#4d616e;font-size:13px}</style></head><body>';
+  h+='<h1>CSS Flexbox &amp; Grid Lab — report</h1><p>'+(nm?'<b>Student:</b> '+esc(nm)+'<br>':'')+'<b>Date:</b> '+new Date().toLocaleString()+'<br><b>Score:</b> '+r.score+'% ('+r.ex+'/'+r.exTotal+' exercises, '+r.qz+'/'+r.qzTotal+' questions correct) · <b>Status:</b> '+r.status+'</p>';
+  var lv=['Not yet','Getting there','Confident'];
+  Object.keys(SECS).forEach(function(sec){
+    h+='<h2>Section '+SECS[sec].n+' · '+SECS[sec].name+'</h2><table><tr><th>Reflection</th><th>Answer</th></tr>';
+    steps.forEach(function(s){if(s.getAttribute('data-sec')!==sec)return;$$('[data-reflect]',s).forEach(function(x){var k=x.getAttribute('data-reflect');h+='<tr><td class="q">'+esc(x.getAttribute('data-q'))+'</td><td>'+esc(S.ref[k]||'—')+'</td></tr>'})});
+    h+='</table><p><b>Self-assessment</b></p><table>'+SA[sec].map(function(t,i){var v=S.sa[sec]&&S.sa[sec][i];return '<tr><td>'+t+'</td><td>'+(v!=null?lv[v]:'—')+'</td></tr>'}).join('')+'</table>';
+    h+='<p><b>Exit ticket 3–2–1</b></p><table>'+[3,2,1].map(function(n,i){return '<tr><td class="q">'+n+' '+TK[sec][i]+'</td><td>'+esc((S.tk[sec]&&S.tk[sec][i])||'—').replace(/\n/g,'<br>')+'</td></tr>'}).join('')+'</table>';
+  });
+  h+='</body></html>';
+  try{
+    var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([h],{type:'text/html'}));a.download='FlexGrid-Lab-Report.html';document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},2000);
+  }catch(e){var w=window.open('','_blank');if(w){w.document.write(h);w.document.close()}}
+}
+
+/* ===================== step wiring ===================== */
+function initStep(i){
+  if(inited[i])return;inited[i]=1;
+  var s=steps[i];
+  $$('[data-code]',s).forEach(function(h){var c=C[h.getAttribute('data-code')];if(c)h.appendChild(codeBlock(c.code,c.label))});
+  $$('[data-widget]',s).forEach(function(h){var k=h.getAttribute('data-widget');if(W[k])W[k](h)});
+  $$('[data-task]',s).forEach(function(h){buildTask(h,h.getAttribute('data-task'))});
+  $$('[data-quiz]',s).forEach(function(h){buildQuiz(h,h.getAttribute('data-quiz'))});
+  $$('[data-reflect]',s).forEach(function(h){buildReflect(h,h.getAttribute('data-reflect'))});
+  $$('[data-selfassess]',s).forEach(function(h){buildSA(h,h.getAttribute('data-selfassess'))});
+  $$('[data-ticket]',s).forEach(function(h){buildTicket(h,h.getAttribute('data-ticket'))});
+  var rb=$('#reportBtn',s);if(rb)rb.addEventListener('click',report);
+}
+function show(i){
+  if(i<0||i>=steps.length)return;
+  cur=i;S.step=i;S.vis[i]=1;initStep(i);
+  steps.forEach(function(s,j){s.hidden=j!==i});
+  railItems.forEach(function(b,j){b.setAttribute('aria-current',j===i?'true':'false')});
+  var sec=steps[i].getAttribute('data-sec');
+  $$('.rail-group',rail).forEach(function(g){g.hidden=g.getAttribute('data-g')!==sec});
+  for(var k in secBtns)secBtns[k].setAttribute('aria-expanded',k===sec?'true':'false');
+  var ws=steps[i].getAttribute('data-ws');
+  document.body.classList.toggle('has-dock',!!ws);
+  if(ws)loadWs(ws,steps[i].getAttribute('data-title').replace(/&amp;/g,'&'));
+  else{curWs=null;lastK=null;if(dock.classList.contains('max'))setMax(false)}
+  var r=railItems[i];if(r&&r.scrollIntoView)try{r.scrollIntoView({block:'nearest',inline:'nearest'})}catch(e){}
+  window.scrollTo(0,0);
+  try{if(location.hash!=='#s'+(i+1))history.replaceState(null,'','#s'+(i+1))}catch(e){}
+  updateProgress();save();
+}
+
+/* theme */
+$('#themeBtn').addEventListener('click',function(){
+  var r=document.documentElement,now=r.getAttribute('data-theme');
+  var dark=now==='dark'||(!now&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+  r.setAttribute('data-theme',dark?'light':'dark');
+});
+
+/* keyboard navigation between steps */
+document.addEventListener('keydown',function(e){
+  var t=e.target&&e.target.tagName;
+  if(t==='TEXTAREA'||t==='INPUT'||t==='SELECT'||dock.classList.contains('max'))return;
+  if(e.altKey&&e.key==='ArrowRight')show(cur+1);
+  if(e.altKey&&e.key==='ArrowLeft')show(cur-1);
+});
+
+/* boot */
+loadLocal();
+var lmsOn=SCORM.init();
+var ls=$('#lmsState');ls.setAttribute('data-on',lmsOn?'1':'0');ls.textContent=lmsOn?'Connected to Blackboard':'Preview mode';
+var start=Math.max(0,Math.min(steps.length-1,S.step||0)),m=/^#s(\d+)$/.exec(location.hash||'');
+if(m){var n=parseInt(m[1],10)-1;if(n>=0&&n<steps.length)start=n}
+show(start);
+window.addEventListener('pagehide',function(){if(LS)try{LS.setItem(STORE_KEY,JSON.stringify(S))}catch(e){}SCORM.finish()});
+window.addEventListener('beforeunload',function(){SCORM.finish()});
+
+</script>
+</body>
+</html>
